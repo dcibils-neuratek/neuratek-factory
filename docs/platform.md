@@ -62,9 +62,22 @@ November 2026; the rest is to build.
   mentioned, what my agents are waiting on me for.
 
 **Agents** - partly built
+- **Connect Claude Code** from a project, in one paste: a one-time setup
+  code traded by Claude Code for its own key, kept on the developer's
+  machine, and a Factory section added to the repository's `CLAUDE.md`
+  (Diego, 24 November). *Built.*
+- **The demo project**: a banking app's account opening, half built, that
+  every signed-in person sees as a viewer, to learn Factory from (Diego,
+  24 November). *Built.*
 - Each person's agents have their own keys, so the board says whose agent
   did what. *Built.*
 - Several agents in one project, each with its own line in the now-strip. *Built.*
+- **Live** - one view of every agent at work across every project, drawn
+  as a live flow (Diego, 24 November, after a "token flow" Sankey): who the
+  work is for, the agents and their engines, the features they are on with
+  each one's step, and where each stands - working, waiting on a person,
+  done today. Ribbons weighted by time now, and by tokens and cost once
+  agents report them. Drawn first, as `docs/live.html`. *To build.*
 - **Any engine** - Claude, Gemini, OpenAI's Codex, Cursor, Aider, or a
   local model: a key records its engine and model, and the board shows them.
 - **Factory's MCP server**: one connection that gives any MCP-capable agent
@@ -104,7 +117,10 @@ November 2026; the rest is to build.
 - **Notifications**: what waits for someone reaches them - an agent's
   question, a review, a mention - by email or Google Chat, at once or as a
   daily digest, each person choosing. Without it an agent waits for hours
-  for someone who has not opened the page.
+  for someone who has not opened the page. Diego, 24 November: "factory should email the user
+  as well if factory needs some input from the user beyond the
+  notification" - so whatever waits for a person (a decision asked of them,
+  an agent's question, a mention) is also sent to their email.
 - **Project context**: each project keeps its conventions, architecture,
   commands and rules - what `CLAUDE.md` is to Kosmos - and every agent is
   handed it with every task, whatever its engine, so a Gemini and a Claude

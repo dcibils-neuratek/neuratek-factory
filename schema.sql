@@ -41,7 +41,8 @@ CREATE TABLE IF NOT EXISTS projects (
   rank      REAL NOT NULL DEFAULT 0,       -- its place in the switcher
   created   TEXT NOT NULL,
   author    TEXT NOT NULL,
-  archived  TEXT                           -- set when put away; kept
+  archived  TEXT,                          -- set when put away; kept
+  everyone  TEXT                           -- viewer or member: what every signed-in person is in it, as the demo is
 );
 
 -- A card: one thing asked for, agreed, being built or done.
@@ -120,6 +121,21 @@ CREATE TABLE IF NOT EXISTS keys (
   created    TEXT NOT NULL,
   last_used  TEXT,
   revoked    TEXT
+);
+
+-- A setup code for connecting a coding agent to a project: made by a person
+-- on the page, shown once inside a prompt to paste into Claude Code, and
+-- traded once, within ten minutes, for an agent key of that person's
+-- limited to that project. Only its SHA-256 is kept.
+CREATE TABLE IF NOT EXISTS connects (
+  id       INTEGER PRIMARY KEY AUTOINCREMENT,
+  hash     TEXT NOT NULL UNIQUE,
+  person   INTEGER NOT NULL,
+  project  TEXT NOT NULL,
+  created  TEXT NOT NULL,
+  expires  TEXT NOT NULL,
+  used     TEXT,
+  key      INTEGER                           -- the key it became
 );
 
 -- Everything that changed, where, and who changed it: what /api/changes reads.

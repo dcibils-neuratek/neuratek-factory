@@ -1,11 +1,89 @@
 <!-- Neuratek Factory. Copyright (c) 2026 Diego Cibils. MIT; see LICENSE. -->
 # Neuratek Factory
 
-Every project's plan as cards on a board - Ideas, Agreed, Next (in order),
-Building, Done and Parked - with Claude's queue, what Claude is doing now,
-discussions, decisions and files, behind one API that a browser, a phone and
-Claude all use. One deployment and one database hold every project; a key
-reaches all of them or only those it was made for.
+**Where Neuratek's people and coding agents build software together.** People
+decide what to build and in what order; agents - Claude Code, Gemini, Codex -
+build it; Factory is where the two meet: the plan, the queue, who is doing
+what right now, the questions that need a person, and the history of how
+each piece got built.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/board-dark.png">
+  <img alt="A project's board: two agents at work across the top, then six columns from Ideas to Parked" src="docs/screenshots/board-light.png">
+</picture>
+
+*The demo project every Neuratek person sees: a banking app's account
+opening, half built. Claude is working on the identity scan; Gemini waits on
+a person's decision about sanctions matches; the queue says what comes next.*
+
+### How work moves
+
+```
+ Idea ──► Discussion ──► Agreed ──► Next (the queue) ──► Building ──► Done
+ people    people+agents   people    people set the order   an agent     tested
+```
+
+- **The board** - six columns: **Ideas** (asked for, not agreed), **Agreed**
+  (will be built), **Next** (the queue, in order), **Building** (under way),
+  **Done**, and **Parked** (held). A card goes from any column to any other
+  by dragging it.
+- **The queue** - Next, in order. An agent takes the top when it finishes
+  what it is on; people set the order by dragging.
+- **The agents, live** - across the top of every project: each agent, the
+  card it is on, its step, what it is waiting on, and for how long; then
+  what is up next and today's work.
+- **Discussions** - an idea talked through before it is work: the options,
+  what each gains and costs, the questions still open, until it becomes cards.
+- **Decisions** - a question an agent cannot answer itself, asked of a
+  person and answered in their words, kept on the card.
+- **My work** - across every project, what waits for you: questions asked of
+  you, mentions, the cards you own, and what your agents need.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/card-dark.png">
+  <img alt="A card opened beside the board: its agent and step, detail, the words it was asked in, and the talk between a person and the agent" src="docs/screenshots/card-light.png">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/queue-dark.png">
+  <img alt="The queue: what each agent is on now, then what comes next, in order" src="docs/screenshots/queue-light.png">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/discussions-dark.png">
+  <img alt="A discussion being shaped: the idea, where it stands, two options with what each gains and costs, the questions still open" src="docs/screenshots/discussions-light.png">
+</picture>
+
+### Connecting Claude Code to a project
+
+Open the project, press **Connect Claude Code**, and paste the prompt it
+gives you into Claude Code in that project's repository. Claude Code trades
+the one-time code in it for a key of its own - named after you, "Claude
+(Ana)", reaching only that project - keeps it in
+`~/.config/neuratek-factory/`, and adds a *Neuratek Factory* section to the
+repository's `CLAUDE.md`: take work from the queue, say what you are doing at
+every step, ask a person rather than guess. From then on the board shows it
+working. No key is ever shown on a page, pasted into a chat or written into
+the repository.
+
+### Signing in
+
+With the Neuratek Google account, through Cloudflare Access; no passwords.
+Admins make projects and add people; each person is a **member** (edits) or
+a **viewer** (reads) of each project they are in. The demo project is open
+to everyone as a viewer.
+
+### Built with
+
+One Cloudflare Worker (`src/worker.js`) for the API and the page, one D1
+database for every project (`schema.sql`), and one page with no build step
+(`public/index.html`). `docs/platform.md` is where Factory is going: agents
+of every maker through MCP, the GitHub repository on every card, reviews,
+notifications by email, and runners that start agents by themselves.
+
+---
+
+## The reference
 
 It began as the Kosmos Board (`dcibils-neuratek/kosmos`, `tools/board`, 9
 October 2026), which knew one project, and was forked on 24 November 2026
@@ -64,11 +142,13 @@ short name (`kosmos`, `site`).
 | PATCH | `/api/people/:id` | `name`, `admin`, `removed` - admins only |
 | GET | `/api/projects?archived=true` | the projects, each with its columns counted, its queue's length and what Claude is doing there |
 | POST | `/api/projects` | `{ name, id, detail }`: a new project; `id` is made from the name when not said |
-| PATCH | `/api/projects/:id` | `name`, `detail`, `archived` |
+| PATCH | `/api/projects/:id` | `name`, `detail`, `archived`, `everyone` (`viewer`, `member` or `null`: what every signed-in person is in it, as in the demo) |
 | GET | `/api/now` | what Claude is doing, in every project the key reaches |
 | GET | `/api/waiting` | what waits for a reply, in every project, each item naming its project |
 | GET | `/api/changes?since=` | everything changed since a time, in every project |
 | GET | `/api/p/:project/members` | who is in the project, and as what |
+| POST | `/api/p/:project/connect` | a one-time setup code for connecting Claude Code, for ten minutes - a person signed in who edits the project |
+| POST | `/api/connect` | `{ code, name }`, with no key: the setup code traded once for an agent key reaching only its project, and the `CLAUDE.md` section |
 | PUT | `/api/p/:project/members/:person` | `{ role }`: member or viewer - admins only |
 | DELETE | `/api/p/:project/members/:person` | out of the project - admins only |
 | GET | `/api/p/:project/cards?column=&area=&q=` | the cards, each column in order |

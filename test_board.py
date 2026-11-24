@@ -18,6 +18,7 @@ with a reason. Then the page, in headless Chrome, by test_page.mjs.
 
 import json
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -68,6 +69,26 @@ def main():
     made = run("d1", "execute", "neuratek-factory", "--file", "schema.sql")
     if made.returncode != 0:
         print("FAIL: the schema would not apply: " + made.stderr[-600:])
+        return 1
+
+    # The demo, on a database of its own: it applies to a fresh one, twice
+    # over, and holds a card in every column, the queue, two agents at work,
+    # an open decision and a discussion.
+    demo_state = os.path.join(state, "demo")
+    demo = lambda *a: subprocess.run(["wrangler", "d1", "execute", "neuratek-factory", "--local", "--persist-to", demo_state, *a],
+                                     cwd=HERE, capture_output=True, text=True)
+    for f in ("schema.sql", "demo.sql", "demo.sql"):
+        r = demo("--file", f)
+        if r.returncode != 0:
+            print("FAIL: %s would not apply to the demo's database: %s" % (f, (r.stderr or r.stdout)[-600:]))
+            return 1
+    r = demo("--json", "--command", "SELECT (SELECT COUNT(DISTINCT col) FROM cards WHERE project = 'demo') AS cols, "
+             "(SELECT COUNT(*) FROM cards WHERE project = 'demo') AS cards, (SELECT COUNT(*) FROM queue WHERE project = 'demo') AS queued, "
+             "(SELECT COUNT(*) FROM doing WHERE project = 'demo') AS agents, (SELECT COUNT(*) FROM decisions WHERE project = 'demo' AND answer IS NULL) AS open, "
+             "(SELECT COUNT(*) FROM discussions WHERE project = 'demo') AS talks, (SELECT everyone FROM projects WHERE id = 'demo') AS everyone")
+    got = json.loads(r.stdout)[0]["results"][0] if r.returncode == 0 else {}
+    if got != {"cols": 6, "cards": 14, "queued": 4, "agents": 2, "open": 1, "talks": 1, "everyone": "viewer"}:
+        print("FAIL: the demo is not what demo.sql says: %r %s" % (got, r.stderr[-300:]))
         return 1
 
     def keys(*a):
@@ -586,6 +607,71 @@ def main():
         s, b = call("PATCH", "/api/people/%d" % me_id, {"admin": False})
         check(s == 400, "an admin took themselves out: %r" % ((s, b),))
         call("PATCH", "/api/people/%d" % ana, {"removed": False})
+
+        # Connecting Claude Code: a person signed in asks for a setup code,
+        # and whoever holds it trades it once, with no other sign-in, for an
+        # agent key of that person's that reaches that project alone.
+        T = lambda: token("test@neuratek.test")
+        s, b = call("POST", S + "/connect", access=T())
+        check(s == 201 and b["code"].startswith("fc_") and b["minutes"] == 10, "a setup code: %r" % ((s, b),))
+        code = b["code"]
+        s, b = call("POST", S + "/connect")
+        check(s == 403, "a key made a setup code: %r" % ((s, b),))
+        was = call("GET", "/api/me", access=A())[1]["roles"].get("kosmos")
+        call("PUT", P + "/members/%d" % ana, {"role": "viewer"})
+        s, b = call("POST", P + "/connect", access=A())
+        check(s == 403, "a viewer made a setup code: %r" % ((s, b),))
+        if was:
+            call("PUT", P + "/members/%d" % ana, {"role": was})
+        s, b = call("POST", "/api/connect", {"code": "fc_" + "0" * 40}, auth=None)
+        check(s == 401, "an unknown setup code traded: %r" % ((s, b),))
+        s, b = call("POST", "/api/connect", {"code": "nonsense"}, auth=None)
+        check(s == 400, "a malformed setup code: %r" % ((s, b),))
+        s, b = call("POST", "/api/connect", {"code": code}, auth=None)
+        # Its address is the one it was asked at - under wrangler dev, the route's.
+        check(s == 201 and b.get("name") == "Claude (Test)" and b.get("project") == "site" and re.match(r"^https?://[^/]+$", b.get("url", ""))
+              and b.get("key", "").startswith("kb_") and len(b["key"]) == 43, "a setup code traded: %r" % ({k: v for k, v in b.items() if k != "key"},))
+        made = b.get("key", "")
+        md = b.get("claude_md", "")
+        check(md.startswith("## Neuratek Factory") and "~/.config/neuratek-factory/site.key" in md and b.get("url", "") + "/api/p/site/queue/take" in md
+              and "/now" in md and '"asks": true' in md and made not in md, "the CLAUDE.md section: %r" % md[:300])
+        s, b = call("POST", "/api/connect", {"code": code}, auth=None)
+        check(s == 401, "a setup code traded twice: %r" % ((s, b),))
+        s, b = call("GET", "/api/me", auth=made)
+        check(s == 200 and b["agent"] is True and b["projects"] == ["site"] and b["name"] == "Claude (Test)", "the connected key: %r" % ((s, b),))
+        s, b = call("PUT", S + "/now", {"step": "connected", "state": "working"}, auth=made)
+        check(s == 200 and b["now"]["author"] == "Claude (Test)", "the connected key said what it does: %r" % ((s, b),))
+        s, _ = call("GET", P + "/cards", auth=made)
+        check(s == 404, "the connected key reached another project")
+        s, b = call("POST", "/api/connect", {"code": call("POST", S + "/connect", access=T())[1]["code"], "name": "Claude (Test, laptop)"}, auth=None)
+        check(s == 201 and b["name"] == "Claude (Test, laptop)", "a connected agent named itself: %r" % ((s, {k: v for k, v in b.items() if k != "key"}),))
+        s, b = call("POST", "/api/connect", {"code": call("POST", S + "/connect", access=T())[1]["code"]}, auth=None)
+        check(s == 201 and b["name"] == "Claude (Test) 2", "a second agent of the same person took the same name: %r" % ((s, b.get("name")),))
+        s, b = call("GET", S + "/changes")
+        check(any(c["kind"] == "agent.connect" for c in b["changes"]), "a connection not in the changes")
+
+        # A project open to everyone, as the demo is: a newcomer sees it as a
+        # viewer and changes nothing; only an admin opens one.
+        s, b = call("PATCH", "/api/projects/site", {"everyone": "viewer"}, access=A())
+        check(s == 403, "someone not an admin opened a project: %r" % ((s, b),))
+        s, b = call("PATCH", "/api/projects/site", {"everyone": "owner"})
+        check(s == 400, "a project opened as an owner: %r" % ((s, b),))
+        s, b = call("PATCH", "/api/projects/site", {"everyone": "viewer"})
+        check(s == 200 and b["project"]["everyone"] == "viewer", "a project opened to everyone: %r" % ((s, b),))
+        N = lambda: token("newcomer2@neuratek.test")
+        s, b = call("GET", "/api/projects", access=N())
+        check(s == 200 and [(p["id"], p["role"]) for p in b["projects"]] == [("site", "viewer")], "a newcomer and an open project: %r" % ((s, b),))
+        s, b = call("GET", S + "/cards", access=N())
+        check(s == 200, "a newcomer could not read an open project: %r" % ((s, b),))
+        s, b = call("POST", S + "/cards", {"title": "a newcomer's card"}, access=N())
+        check(s == 403, "a newcomer changed an open project: %r" % ((s, b),))
+        s, b = call("POST", S + "/connect", access=N())
+        check(s == 403, "a newcomer connected an agent to an open project: %r" % ((s, b),))
+        s, b = call("GET", "/api/projects", access=A())
+        check(dict((p["id"], p["role"]) for p in b["projects"]).get("site") == "member", "an open project lowered a member: %r" % b)
+        call("PATCH", "/api/projects/site", {"everyone": None})
+        s, b = call("GET", "/api/projects", access=N())
+        check(b["projects"] == [], "a project closed again still open: %r" % b)
 
         subprocess.run([sys.executable, "keys.py", "--local", "--persist-to", state, "revoke", "Other"], cwd=HERE, capture_output=True)
         s, _ = call("GET", "/api/me", auth=open(other).read().strip())

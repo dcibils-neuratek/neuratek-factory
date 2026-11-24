@@ -109,16 +109,24 @@ header.top .crumb { color: var(--dim); font-weight: 500; }
 .spacer { margin-left: auto; }
 
 /* the agents at work in a project, one line each */
-.agents { display: flex; align-items: center; gap: 8px; padding: 8px 18px; border-bottom: 1px solid var(--line); background: var(--panel); overflow-x: auto; scrollbar-width: thin; }
-.ag { display: flex; align-items: center; gap: 8px; padding: 4px 10px 4px 5px; border: 1px solid var(--line); border-radius: 8px; background: var(--ground); white-space: nowrap; font-size: 12.5px; }
-.ag .st { width: 7px; height: 7px; border-radius: 50%; flex: none; }
-.ag.waiting { border-color: var(--amber); background: var(--amber-soft); }
-.ag .on { border: 0; background: none; padding: 0; color: var(--ink); font-weight: 500; text-decoration: underline; text-decoration-color: var(--line2); text-underline-offset: 3px; }
-.ag .stp { color: var(--soft); }
-.agents::-webkit-scrollbar { height: 6px; }
-.agents::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 3px; }
-.agents .next { border: 0; background: none; color: var(--soft); font-size: 12.5px; padding: 4px 6px; white-space: nowrap; text-align: left; }
+.agents { display: flex; flex-direction: column; gap: 6px; margin: 10px 18px 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); font-size: 13px; }
+.ag { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 10px; row-gap: 2px; padding: 4px 0; }
+.ag + .ag { border-top: 1px solid var(--line); padding-top: 8px; }
+.ag .who { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; white-space: nowrap; }
+.ag .who .av { align-self: center; }
+.ag .st { width: 8px; height: 8px; border-radius: 50%; flex: none; align-self: center; }
+.ag .is { color: var(--soft); white-space: nowrap; }
+.ag .on { border: 0; background: none; padding: 0; color: var(--ink); font: inherit; font-weight: 600; text-align: left; text-decoration: underline; text-decoration-color: var(--line2); text-underline-offset: 3px; cursor: pointer; }
+.ag .stp { color: var(--ink); }
+.ag .stp .k, .ag .wt .k { color: var(--soft); }
+.ag .wt { display: inline-flex; align-items: baseline; gap: 6px; padding: 1px 8px; border-radius: 6px; background: var(--amber-soft); color: var(--ink); }
+.ag .since { margin-left: auto; color: var(--soft); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.agents .foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+.agents .next { border: 0; background: none; color: var(--soft); font: inherit; padding: 0; text-align: left; cursor: pointer; flex: 1; min-width: 0; }
 .agents .next b { font-weight: 500; color: var(--ink); }
+.agents .idle { color: var(--soft); }
+.intro { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 10px 18px 0; padding: 10px 12px; border: 1px dashed var(--line2); border-radius: 10px; color: var(--soft); font-size: 13px; }
+.intro b { color: var(--ink); font-weight: 600; }
 .agents .feed { margin-left: auto; }
 .today { border-bottom: 1px solid var(--line); background: var(--panel); padding: 6px 18px 10px; margin: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; }
 .today li { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 10px; }
@@ -136,7 +144,7 @@ header.top .crumb { color: var(--dim); font-weight: 500; }
 .columns { min-width: 0; overflow-x: scroll; overflow-y: hidden; padding: 10px 18px 6px; height: calc(100dvh - var(--above, 160px)); min-height: 360px; scrollbar-color: var(--line2) transparent; }
 .columns::-webkit-scrollbar { height: 12px; }
 .columns::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 6px; border: 3px solid var(--ground); }
-.cols { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(196px, 1fr); gap: 10px; height: 100%; }
+.cols { display: grid; grid-template-columns: repeat(6, minmax(140px, 1fr)); gap: 10px; height: 100%; }
 .col { display: flex; flex-direction: column; min-height: 0; min-width: 0; border-radius: 10px; }
 .col.over { background: var(--accent-soft); }
 .colhead { display: flex; align-items: center; gap: 7px; padding: 2px 4px 8px; }
@@ -273,7 +281,7 @@ pre.cmd { margin: 0; font: 12px/1.5 var(--mono); background: var(--sunk); border
   .search { display: none; }
   .agents, .chips, .today { padding-left: 16px; padding-right: 16px; }
   .columns { padding: 10px 16px 6px; }
-  .cols { grid-auto-columns: 78vw; }
+  .cols { grid-template-columns: repeat(6, 78vw); }
   .page { padding: 16px; }
   .split { grid-template-columns: minmax(0, 1fr); }
   .qitem { grid-template-columns: 22px 24px minmax(0, 1fr); }
@@ -591,6 +599,7 @@ function topbar() {
     el("button", { class: "menu", type: "button", "aria-label": "Menu", onclick: () => { S.menu = !S.menu; document.querySelector(".app").classList.toggle("menuopen", S.menu); } }, "☰"),
     el("h1", {}, inProject ? el("span", { class: "crumb", text: here.name + " / " }) : null, inProject || !PROJECT_VIEWS.includes(S.view) ? titles[S.view] || "" : "All projects"),
     search,
+    inProject && canWrite() ? el("button", { class: "btn", type: "button", onclick: () => connectSheet() }, "Connect Claude Code") : null,
     inProject && canWrite() ? el("button", { class: "btn go", type: "button", onclick: () => newCardSheet() }, "New card") : null,
     S.view === "projects" && S.me.admin ? el("button", { class: "btn go", type: "button", onclick: () => projectSheet() }, "New project") : null,
     S.view === "people" && S.me.admin ? el("button", { class: "btn go", type: "button", onclick: personSheet }, "Add someone") : null);
@@ -605,20 +614,27 @@ function upcoming() {
 function agentsBar() {
   const live = S.nows.filter((n) => n.state !== "idle" && (n.card || n.step));
   const ahead = upcoming();
-  const line = (n) => el("span", { class: "ag" + (n.state === "waiting" ? " waiting" : ""), "data-author": n.author },
-    avatar(n.author, true), el("span", { text: n.author }),
-    el("span", { class: "st", style: "background:" + (n.state === "waiting" ? "var(--amber)" : "var(--green)") }),
-    n.card ? el("button", { class: "on", type: "button", onclick: () => openCard(n.card) }, n.title || n.card) : el("span", { class: "on", text: n.step }),
-    n.card && n.step ? el("span", { class: "stp", text: "· " + n.step }) : null,
-    n.waiting ? el("span", { class: "stp", text: "· waiting on " + n.waiting }) : null,
-    el("span", { class: "dim", text: minutes(n.since) }));
+  // Each agent as the Kosmos Board said it: working or waiting, on which
+  // card, the step, what it waits on, and since when.
+  const line = (n) => {
+    const waiting = n.state === "waiting";
+    return el("div", { class: "ag" + (waiting ? " waiting" : ""), "data-author": n.author },
+      el("span", { class: "who" }, avatar(n.author, true), n.author,
+        el("span", { class: "st", style: "background:" + (waiting ? "var(--amber)" : "var(--green)") })),
+      el("span", { class: "is", text: waiting ? "is waiting" : "is working" + (n.card ? " on" : "") }),
+      n.card ? el("button", { class: "on", type: "button", onclick: () => openCard(n.card) }, n.title || n.card) : null,
+      n.step ? el("span", { class: "stp" }, el("span", { class: "k", text: "Step: " }), n.step) : null,
+      n.waiting ? el("span", { class: "wt" }, el("span", { class: "k", text: "Waiting on:" }), n.waiting) : null,
+      el("span", { class: "since", text: "since " + when(n.since) + " · " + minutes(n.since) }));
+  };
   return [
     el("section", { class: "agents", "aria-label": "Agents at work here" },
-      live.length ? live.map(line) : el("span", { class: "dim", text: "No agent is working here now." }),
-      ahead.length ? el("button", { class: "next", type: "button", onclick: () => go("queue") },
-        el("span", { class: "dim", text: "Up next " }), el("b", { text: ahead[0].title }), ahead[1] ? ", then " + ahead[1].title : "",
-        el("span", { class: "dim", text: " · " + ahead.length + " in the queue" })) : null,
-      el("button", { class: "btn quiet feed", type: "button", "aria-expanded": String(S.feedOpen), onclick: () => { S.feedOpen = !S.feedOpen; renderMain(); } }, "Today")),
+      live.length ? live.map(line) : el("div", { class: "idle", text: "No agent is working here now. Connect one from the project's menu, and it says here what it is doing at every step." }),
+      el("div", { class: "foot" },
+        ahead.length ? el("button", { class: "next", type: "button", onclick: () => go("queue") },
+          el("span", { class: "dim", text: "Up next " }), el("b", { text: ahead[0].title }), ahead[1] ? ", then " + ahead[1].title : "",
+          el("span", { class: "dim", text: " · " + ahead.length + " in the queue" })) : el("span", { class: "next dim", text: "The queue is empty: drag a card into Next." }),
+        el("button", { class: "btn quiet feed", type: "button", "aria-expanded": String(S.feedOpen), onclick: () => { S.feedOpen = !S.feedOpen; renderMain(); } }, "Today's work"))),
     S.feedOpen ? el("ol", { class: "today" }, S.today.length ? S.today.map((c) => el("li", {}, el("time", { text: when(c.at) }), el("span", {}, el("b", { style: "font-weight:500", text: c.author + " " }), sentence(c))))
       : el("li", {}, el("span"), el("span", { class: "dim", text: "Nothing yet today." }))) : null,
   ];
@@ -667,7 +683,6 @@ function shownCards() {
 }
 
 function board() {
-  if (!S.cards.length && !S.query) return [agentsBar(), emptyProject()];
   const areas = [...new Set(S.cards.map((c) => c.area).filter(Boolean))].sort();
   const me = S.me.person.id;
   const chip = (key, name, colour, n) => el("button", { class: "chip", type: "button", "aria-pressed": String(S.area === key),
@@ -691,22 +706,17 @@ function board() {
         canWrite() ? el("button", { class: "addcard", type: "button", onclick: () => newCardSheet(k) }, "+ Add a card") : null));
   }));
   const open = S.chosen && S.detail;
-  return [agentsBar(), chips, el("div", { class: "work" + (open ? " open" : "") }, el("div", { class: "columns" }, cols), open ? panel() : null)];
+  return [agentsBar(), S.cards.length ? chips : emptyProject(), el("div", { class: "work" + (open ? " open" : "") }, el("div", { class: "columns" }, cols), open ? panel() : null)];
 }
 
-// An empty project says what it is for and what to do first.
+// An empty project says, above its columns, what they are for.
 function emptyProject() {
   const here = projectOf(S.project);
-  return el("div", { class: "page narrow" },
-    el("h2", { class: "h", text: here.name + " has no cards yet" }),
-    el("p", { class: "lead", text: "A card is one thing to build. Ideas are asked for; Agreed is what will be built; Next is the queue agents take from, in order; Building, Done and Parked say where each one is." }),
-    el("div", { class: "steps" },
-      el("div", { class: "step" }, el("span", { class: "k", text: "FIRST" }), el("b", { text: "Write down an idea" }), el("span", { class: "dim", text: "A card in Ideas, in your own words." })),
-      el("div", { class: "step" }, el("span", { class: "k", text: "THEN" }), el("b", { text: "Agree it and queue it" }), el("span", { class: "dim", text: "Drag it to Next, in the place it belongs." })),
-      el("div", { class: "step" }, el("span", { class: "k", text: "AND" }), el("b", { text: "Connect an agent" }), el("span", { class: "dim", text: "It takes the top of Next and says what it is doing." }))),
-    el("div", { class: "row" },
-      canWrite() ? el("button", { class: "btn go", type: "button", onclick: () => newCardSheet("ideas") }, "Write the first card") : null,
-      el("button", { class: "btn", type: "button", onclick: () => go("guide") }, "How to use Factory")));
+  return el("div", { class: "intro" },
+    el("span", {}, el("b", { text: here.name + " has no cards yet. " }),
+      "Ideas are asked for; Agreed will be built; Next is the queue agents take from, in order; Building is under way; Done is finished; Parked is held. Drag a card into any column."),
+    canWrite() ? el("button", { class: "btn go", type: "button", onclick: () => newCardSheet("ideas") }, "Write the first card") : null,
+    el("button", { class: "btn", type: "button", onclick: () => go("guide") }, "How to use Factory"));
 }
 
 function cardBox(c) {
@@ -908,6 +918,43 @@ function sheet(title, fields, goText, act) {
   document.body.append(back);
   const first = back.querySelector("input:not([type=checkbox]), textarea, select, button.go");
   if (first) first.focus();
+}
+
+// **Connect Claude Code**: a setup code, made for this person and project,
+// inside a prompt to paste into Claude Code in the project's repository.
+// Claude Code trades it once for a key of its own, keeps the key in a file,
+// and adds Factory's section to the repository's CLAUDE.md. The key is never
+// on this page, in a chat, or in the repository.
+function connectPrompt(code, here) {
+  const dir = "~/.config/neuratek-factory";
+  return [
+    "Connect this repository to Neuratek Factory, project \"" + here.name + "\" (" + here.id + "), so you work from its queue and say what you are doing there.",
+    "",
+    "1. Trade this one-time setup code for your own key - it works once, for 10 minutes. Save the answer to a file and do not print it, because it holds the key:",
+    "   mkdir -p " + dir + " && chmod 700 " + dir,
+    "   curl -sf -X POST " + location.origin + "/api/connect -H 'content-type: application/json' -d '{\"code\":\"" + code + "\"}' -o " + dir + "/connect.json",
+    "2. From " + dir + "/connect.json: write `key` alone to " + dir + "/" + here.id + ".key and chmod 600 it. Never print the key, and never put it in this repository or a message.",
+    "3. Add `claude_md` from that file to this repository's CLAUDE.md as its \"## Neuratek Factory\" section - replacing that section if there is one, making CLAUDE.md if there is none. Then delete connect.json.",
+    "4. Check the connection: GET " + location.origin + "/api/me with the header `Authorization: Bearer $(cat " + dir + "/" + here.id + ".key)` answers with the name in `name`. Tell me that name.",
+    "5. From now on, work as the Neuratek Factory section of CLAUDE.md says: take the next task from the queue, and say what you are doing at every step.",
+  ].join("\n");
+}
+
+async function connectSheet() {
+  const here = projectOf(S.project);
+  let made;
+  try { made = await api(P() + "/connect", { method: "POST" }); } catch (e) { toast("No setup code: " + e.message); return; }
+  const prompt = connectPrompt(made.code, here);
+  const box = el("textarea", { class: "field mono", rows: "14", readonly: true, "aria-label": "The prompt for Claude Code", style: "font-size:12px;white-space:pre-wrap" });
+  box.value = prompt;
+  const until = new Date(made.expires).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  sheet("Connect Claude Code to " + here.name, [
+    el("p", { class: "dim", style: "margin:0", text: "Open Claude Code in this project's repository and paste this. It gets a key of its own, named after you, that reaches only " + here.name + ", and adds Factory's section to the repository's CLAUDE.md. The code in it works once, until " + until + "." }),
+    box,
+  ], "Copy the prompt", async () => {
+    try { await navigator.clipboard.writeText(prompt); } catch { box.select(); document.execCommand("copy"); }
+    toast("Copied: paste it into Claude Code");
+  });
 }
 
 function ownersSheet(c) {
@@ -1357,7 +1404,7 @@ function guide() {
     el("ul", {}, el("li", { text: "An idea that needs thinking through starts as a discussion: options with what each gains and costs, and the questions still open. When it is clear, it becomes cards." }),
       el("li", { text: "Decisions lists every question in the project, open and answered, each answer in the words it was given." })),
     el("h3", { text: "Connecting your agent" }),
-    el("p", { text: "Each agent has a key of its own, made for you by an admin for now, named after you - \"Claude (Ana)\" - so the board says whose agent did what. The agent uses Factory's API with it; connecting Claude Code, Gemini CLI, Codex and Cursor in one step, through Factory's MCP server, comes next." }),
+    el("p", { text: "Each agent has a key of its own, named after you - \"Claude (Ana)\" - so the board says whose agent did what. To connect Claude Code to a project, open the project and press Connect Claude Code: it gives you a prompt to paste into Claude Code in that project's repository. Claude Code trades the one-time code in it for its own key, keeps the key on your machine, and adds Factory's section to the repository's CLAUDE.md, which tells it to take work from the queue and say what it is doing at every step. Gemini CLI, Codex and Cursor, through Factory's MCP server, come next." }),
     el("pre", { class: "cmd", text: "python3 keys.py make \"Claude (Ana)\" --person ana@neuratek.com --agent --to ~/.config/neuratek-factory/claude.key" }),
     el("p", { text: "The API is described under the {} button at the bottom of the sidebar." }));
 }
@@ -1393,7 +1440,7 @@ function tour() {
 // ---- The API, for another device or a program -----------------------------------------
 // The same table as README.md, which test_board.py holds it to.
 
-const ROUTES = [["GET","/api/me","who asks: the key's name, its person, whether an admin, its projects (`null`: all) and the role in each"],["GET","/api/mine","My work: the cards I own, and what waits for me, in every project"],["POST","/api/mentions/:id/done","a mention seen, out of My work"],["GET","/api/people","everyone an admin can see; anyone else, the people sharing a project with them"],["POST","/api/people","`{ email, name, admin }`: someone added before they sign in - admins only"],["PATCH","/api/people/:id","`name`, `admin`, `removed` - admins only"],["GET","/api/projects?archived=true","the projects, each with its columns counted, its queue's length and what Claude is doing there"],["POST","/api/projects","`{ name, id, detail }`: a new project; `id` is made from the name when not said"],["PATCH","/api/projects/:id","`name`, `detail`, `archived`"],["GET","/api/now","what Claude is doing, in every project the key reaches"],["GET","/api/waiting","what waits for a reply, in every project, each item naming its project"],["GET","/api/changes?since=","everything changed since a time, in every project"],["GET","/api/p/:project/members","who is in the project, and as what"],["PUT","/api/p/:project/members/:person","`{ role }`: member or viewer - admins only"],["DELETE","/api/p/:project/members/:person","out of the project - admins only"],["GET","/api/p/:project/cards?column=&area=&q=","the cards, each column in order"],["POST","/api/p/:project/cards","a new card: `title`, `column` (Ideas when not said), `area`, `ref`, `detail`, `quote`, `before`"],["GET","/api/p/:project/cards/:id","one card, its notes, its history, its decisions"],["PATCH","/api/p/:project/cards/:id","`title`, `area`, `ref`, `detail`, `quote`, `in_roadmap`"],["POST","/api/p/:project/cards/:id/move","`{ column, before }`: into a column, before a card or last"],["POST","/api/p/:project/cards/:id/notes","`{ text, asks }`: a card's talk; `asks` when Claude awaits a reply"],["DELETE","/api/p/:project/cards/:id","removed, kept to bring back"],["GET","/api/p/:project/decisions?open=true","the questions, open or all"],["POST","/api/p/:project/decisions","`{ card, question, options }`"],["PATCH","/api/p/:project/decisions/:id","`{ answer, words }`: answered, and a note on its card"],["GET","/api/p/:project/now","what Claude is doing here: its card, its step, what it waits on, since when"],["PUT","/api/p/:project/now","`{ card, step, state, waiting }`: said by Claude at each step; `state` is working, waiting or idle"],["GET","/api/p/:project/queue","Claude's queue in order: cards and tasks, each with its place"],["POST","/api/p/:project/queue","`{ card }` or `{ title }` for a task; last, `{ before }` or `{ top: true }`"],["POST","/api/p/:project/queue/:id/move","`{ before }`, `{ top: true }`, or last"],["DELETE","/api/p/:project/queue/:id","out of the queue; a card waiting in Next goes back to Agreed"],["POST","/api/p/:project/queue/take","Claude takes the top: it becomes now, its card Building"],["GET","/api/p/:project/discussions?stage=","open, shaping, ready, became, parked"],["POST","/api/p/:project/discussions","`{ title, idea, for }` - the idea is its first message"],["GET","/api/p/:project/discussions/:id","with its summary, options, open questions, conversation and cards"],["PATCH","/api/p/:project/discussions/:id","`stage`, `summary`, `options`, `questions`, `title`, `idea`, `for`"],["POST","/api/p/:project/discussions/:id/messages","`{ text, asks }`"],["POST","/api/p/:project/discussions/:id/cards","a card made from it, linked both ways; it has become cards"],["GET","/api/p/:project/waiting","what waits for a reply here, from Claude and from a person"],["POST","/api/p/:project/cards/:id/files","a file onto a card: the bytes as the body, `Content-Type`, `?name=&caption=`"],["POST","/api/p/:project/discussions/:id/files","a file onto a discussion, the same way"],["GET","/api/files/:id","the file, if its project is one the key reaches; `DELETE` removes it"],["GET","/api/p/:project/changes?since=","everything changed here since a time"],["GET","/api/p/:project/export.md","the project's board as Markdown"]];
+const ROUTES = [["GET","/api/me","who asks: the key's name, its person, whether an admin, its projects (`null`: all) and the role in each"],["GET","/api/mine","My work: the cards I own, and what waits for me, in every project"],["POST","/api/mentions/:id/done","a mention seen, out of My work"],["GET","/api/people","everyone an admin can see; anyone else, the people sharing a project with them"],["POST","/api/people","`{ email, name, admin }`: someone added before they sign in - admins only"],["PATCH","/api/people/:id","`name`, `admin`, `removed` - admins only"],["GET","/api/projects?archived=true","the projects, each with its columns counted, its queue's length and what Claude is doing there"],["POST","/api/projects","`{ name, id, detail }`: a new project; `id` is made from the name when not said"],["PATCH","/api/projects/:id","`name`, `detail`, `archived`, `everyone` (`viewer`, `member` or `null`: what every signed-in person is in it, as in the demo)"],["GET","/api/now","what Claude is doing, in every project the key reaches"],["GET","/api/waiting","what waits for a reply, in every project, each item naming its project"],["GET","/api/changes?since=","everything changed since a time, in every project"],["GET","/api/p/:project/members","who is in the project, and as what"],["POST","/api/p/:project/connect","a one-time setup code for connecting Claude Code, for ten minutes - a person signed in who edits the project"],["POST","/api/connect","`{ code, name }`, with no key: the setup code traded once for an agent key reaching only its project, and the `CLAUDE.md` section"],["PUT","/api/p/:project/members/:person","`{ role }`: member or viewer - admins only"],["DELETE","/api/p/:project/members/:person","out of the project - admins only"],["GET","/api/p/:project/cards?column=&area=&q=","the cards, each column in order"],["POST","/api/p/:project/cards","a new card: `title`, `column` (Ideas when not said), `area`, `ref`, `detail`, `quote`, `before`"],["GET","/api/p/:project/cards/:id","one card, its notes, its history, its decisions"],["PATCH","/api/p/:project/cards/:id","`title`, `area`, `ref`, `detail`, `quote`, `in_roadmap`"],["POST","/api/p/:project/cards/:id/move","`{ column, before }`: into a column, before a card or last"],["POST","/api/p/:project/cards/:id/notes","`{ text, asks }`: a card's talk; `asks` when Claude awaits a reply"],["DELETE","/api/p/:project/cards/:id","removed, kept to bring back"],["GET","/api/p/:project/decisions?open=true","the questions, open or all"],["POST","/api/p/:project/decisions","`{ card, question, options }`"],["PATCH","/api/p/:project/decisions/:id","`{ answer, words }`: answered, and a note on its card"],["GET","/api/p/:project/now","what Claude is doing here: its card, its step, what it waits on, since when"],["PUT","/api/p/:project/now","`{ card, step, state, waiting }`: said by Claude at each step; `state` is working, waiting or idle"],["GET","/api/p/:project/queue","Claude's queue in order: cards and tasks, each with its place"],["POST","/api/p/:project/queue","`{ card }` or `{ title }` for a task; last, `{ before }` or `{ top: true }`"],["POST","/api/p/:project/queue/:id/move","`{ before }`, `{ top: true }`, or last"],["DELETE","/api/p/:project/queue/:id","out of the queue; a card waiting in Next goes back to Agreed"],["POST","/api/p/:project/queue/take","Claude takes the top: it becomes now, its card Building"],["GET","/api/p/:project/discussions?stage=","open, shaping, ready, became, parked"],["POST","/api/p/:project/discussions","`{ title, idea, for }` - the idea is its first message"],["GET","/api/p/:project/discussions/:id","with its summary, options, open questions, conversation and cards"],["PATCH","/api/p/:project/discussions/:id","`stage`, `summary`, `options`, `questions`, `title`, `idea`, `for`"],["POST","/api/p/:project/discussions/:id/messages","`{ text, asks }`"],["POST","/api/p/:project/discussions/:id/cards","a card made from it, linked both ways; it has become cards"],["GET","/api/p/:project/waiting","what waits for a reply here, from Claude and from a person"],["POST","/api/p/:project/cards/:id/files","a file onto a card: the bytes as the body, `Content-Type`, `?name=&caption=`"],["POST","/api/p/:project/discussions/:id/files","a file onto a discussion, the same way"],["GET","/api/files/:id","the file, if its project is one the key reaches; `DELETE` removes it"],["GET","/api/p/:project/changes?since=","everything changed here since a time"],["GET","/api/p/:project/export.md","the project's board as Markdown"]];
 
 function apiPage() {
   return el("div", { class: "page" },

@@ -180,7 +180,14 @@ async function who(request, env) {
   await DB.prepare("UPDATE people SET seen = ? WHERE id = ?").bind(now(), person.id).run();
 
   const rows = await DB.prepare("SELECT project, role FROM members WHERE person = ?").bind(person.id).all();
+  const roles = new Map(rows.results.map((r) => [r.project, r.role]));
   let narrow = null;
+
+  // A project open to everyone - the demo - is theirs at its role, unless
+  // they were made more in it.
+  const open = await DB.prepare("SELECT id, everyone FROM projects WHERE everyone IS NOT NULL").all();
+
+  for (const p of open.results) if (!roles.has(p.id) && ROLES.includes(p.everyone)) roles.set(p.id, p.everyone);
 
   if (key && key.projects) {
     try { narrow = JSON.parse(key.projects); } catch { narrow = []; }
@@ -188,7 +195,7 @@ async function who(request, env) {
   }
 
   return { name: key ? key.name : person.name, agent: !!(key && key.agent), by_key: !!key, person,
-           admin: !!person.admin && !narrow, roles: new Map(rows.results.map((r) => [r.project, r.role])), narrow };
+           admin: !!person.admin && !narrow, roles, narrow };
 }
 
 // What someone is in a project: "admin", "member", "viewer", or null.
@@ -443,6 +450,10 @@ async function edit_project(env, key, id, body) {
   if (body.name !== undefined) fields.name = text(body.name, "name", true);
   if (body.detail !== undefined) fields.detail = text(body.detail, "detail");
   if (body.archived !== undefined) fields.archived = body.archived ? (p.archived || now()) : null;
+  if (body.everyone !== undefined) {
+    if (body.everyone !== null && !ROLES.includes(body.everyone)) throw new Error("everyone is member, viewer or null");
+    fields.everyone = body.everyone;
+  }
 
   const names = Object.keys(fields);
 
@@ -1248,8 +1259,110 @@ async function export_md(cx) {
   return new Response(out.join("\n"), { headers: { "content-type": "text/markdown; charset=utf-8", "cache-control": "no-store" } });
 }
 
+// ---- Connecting a coding agent ----------------------------------------------
+//
+// A person, signed in on the page, asks for a setup code for a project; the
+// page shows it inside a prompt to paste into Claude Code in that project's
+// repository. Claude Code trades it once, within ten minutes, for an agent
+// key of that person's limited to that project, and is handed the section
+// to add to the repository's CLAUDE.md. No key crosses a chat or a screen.
+//
+const CONNECT_MINUTES = 10;
+
+async function new_connect(cx) {
+  if (cx.me.by_key) return refused(403, "a setup code is asked for by a person signed in, not by a key");
+  if (!writes(cx.me, cx.project)) return refused(403, "a viewer connects no agent to this project");
+
+  const code = "fc_" + [...crypto.getRandomValues(new Uint8Array(20))].map((b) => b.toString(16).padStart(2, "0")).join("");
+  const t = new Date();
+  const expires = new Date(t.getTime() + CONNECT_MINUTES * 60000).toISOString();
+
+  await cx.env.DB.prepare("INSERT INTO connects (hash, person, project, created, expires) VALUES (?, ?, ?, ?, ?)")
+    .bind(await sha256(code), cx.me.person.id, cx.project, t.toISOString(), expires).run();
+  return json({ code, expires, minutes: CONNECT_MINUTES }, 201);
+}
+
+// What the repository's CLAUDE.md is given: where the project is, and how
+// work is done on it.
+function factory_section(origin, p, name) {
+  const api = `${origin}/api/p/${p.id}`;
+  const key = `~/.config/neuratek-factory/${p.id}.key`;
+
+  return `## Neuratek Factory
+
+This repository's work is planned on Neuratek Factory, project **${p.name}**
+(\`${p.id}\`): ${origin}. You work there as **${name}**.
+
+The key is in \`${key}\`; send it as
+\`Authorization: Bearer $(cat ${key})\`. Never print it, and never put it in
+this repository or in a message.
+
+How to work:
+
+- **Take the next task**: \`POST ${api}/queue/take\`. It is the top of the
+  queue, and the card it names moves to Building. Work on nothing else
+  unless a person asks.
+- **Say what you are doing, at every step**: \`PUT ${api}/now\` with
+  \`{"card": "<id>", "state": "working", "step": "<a few words>"}\`; while you
+  wait, \`"state": "waiting", "waiting": "<on what>"\`; with nothing left,
+  \`"state": "idle"\`.
+- **Ask, do not guess**: a note on the card with \`"asks": true\`
+  (\`POST ${api}/cards/<id>/notes\`), or a decision with \`question\` and
+  \`options\` (\`POST ${api}/decisions\`) - then wait for the answer.
+- **Show the work**: what was done as notes on the card, and screenshots as
+  files (\`POST ${api}/cards/<id>/files?name=<file>\`, the bytes as the body).
+- **Done is tested**: then \`POST ${api}/cards/<id>/move\` with
+  \`{"column": "done"}\`, and take the next.
+
+Every route is listed in the page's API view.
+`;
+}
+
+async function trade_connect(request, env, url) {
+  let body;
+
+  try { body = JSON.parse(await request.text()); } catch { return refused(400, "the body is not JSON"); }
+  if (!body || typeof body.code !== "string" || !/^fc_[0-9a-f]{40}$/.test(body.code)) return refused(400, "no setup code");
+
+  const DB = env.DB;
+  const c = await DB.prepare("SELECT * FROM connects WHERE hash = ?").bind(await sha256(body.code)).first();
+  const t = now();
+
+  if (!c || c.used || c.expires < t) return refused(401, "this setup code is used, expired or unknown: make a new one on the page");
+
+  const person = await DB.prepare("SELECT * FROM people WHERE id = ? AND removed IS NULL").bind(c.person).first();
+  const p = await project_row(env, c.project);
+  const member = person && await DB.prepare("SELECT role FROM members WHERE project = ? AND person = ?").bind(c.project, person.id).first();
+  const may = person && p && !p.archived && (person.admin || (member && member.role === "member") || (!member && p.everyone === "member"));
+
+  if (!may) return refused(403, "whoever made this setup code no longer edits this project");
+
+  // Taken once: whoever marks it used is the one who gets the key.
+  const took = await DB.prepare("UPDATE connects SET used = ? WHERE id = ? AND used IS NULL").bind(t, c.id).run();
+
+  if (!took.meta.changes) return refused(401, "this setup code is used, expired or unknown: make a new one on the page");
+
+  // "Claude (Ana)", or what the agent says it is; one name for one agent,
+  // since the now-strip has a line per name.
+  const first = person.name.split(/\s+/)[0] || person.handle;
+  const base = (text(body.name, "name") || `Claude (${first})`).slice(0, LIMITS.name - 3);
+  let name = base;
+
+  for (let n = 2; await DB.prepare("SELECT 1 FROM keys WHERE name = ? AND revoked IS NULL").bind(name).first(); n++) name = `${base} ${n}`;
+
+  const key = "kb_" + [...crypto.getRandomValues(new Uint8Array(20))].map((b) => b.toString(16).padStart(2, "0")).join("");
+  const made = await DB.prepare("INSERT INTO keys (name, hash, person, agent, projects, created) VALUES (?, ?, ?, 1, ?, ?)")
+    .bind(name, await sha256(key), person.id, JSON.stringify([p.id]), t).run();
+
+  await DB.prepare("UPDATE connects SET key = ? WHERE id = ?").bind(made.meta.last_row_id, c.id).run();
+  await log({ env, author: person.name, project: p.id }, "agent.connect", null, { name });
+  return json({ key, name, project: p.id, project_name: p.name, url: url.origin,
+                claude_md: factory_section(url.origin, p, name) }, 201);
+}
+
 // A project's own routes, `parts` being what follows `/api/p/<project>/`.
 async function project_api(cx, request, url, m, parts, body, upload) {
+  if (parts[0] === "connect" && parts.length === 1 && m === "POST") return new_connect(cx);
   if (parts[0] === "members") {
     if (parts.length === 1 && m === "GET") return list_members(cx);
     if (parts.length === 2 && m === "PUT") return set_member(cx, Number(parts[1]), body);
@@ -1296,6 +1409,10 @@ async function project_api(cx, request, url, m, parts, body, upload) {
 }
 
 async function api(request, env, url) {
+  // The one route a request without a key or a sign-in may take: the setup
+  // code it carries is what says who it is.
+  if (url.pathname === "/api/connect" && request.method === "POST") return trade_connect(request, env, url);
+
   const key = await who(request, env);
 
   if (!key) return refused(401, "sign in with your Google account, or send a key: Authorization: Bearer kb_...");

@@ -152,11 +152,13 @@ try {
     (await js(`getComputedStyle(document.body).backgroundColor`)) !== was, "the theme did not change and stay chosen");
   await js(`document.querySelector('.side .acts button[aria-label="Light or dark"]').click(); true`);
   await until(`!!document.querySelector('.list[data-col="ideas"] .cardbox[data-id="${idea}"]')`, "a card in Ideas was not in the Ideas column");
-  check(await js(`(() => { const c = document.querySelector(".columns"), r = c.getBoundingClientRect();
+  const fit = await js(`(() => { const c = document.querySelector(".columns"), r = c.getBoundingClientRect();
     const done = document.querySelector('.list[data-col="done"]');
     const last = document.querySelector('.col[data-col="parked"]').getBoundingClientRect();
-    return r.bottom <= innerHeight && done.scrollHeight > done.clientHeight && getComputedStyle(c).overflowX === "scroll" && (last.right <= r.right || c.scrollWidth > c.clientWidth); })()`),
-    "the board did not end inside the window, with every column shown or the columns scrolling sideways");
+    return { bottom: Math.round(r.bottom), inner: innerHeight, doneFull: done.scrollHeight > done.clientHeight, x: getComputedStyle(c).overflowX,
+             parked: Math.round(last.right), right: Math.round(r.right), wide: c.scrollWidth > c.clientWidth }; })()`);
+  check(fit.bottom <= fit.inner && fit.doneFull && fit.x === "scroll" && fit.parked <= fit.right,
+    "the board did not end inside the window with all six columns in it, Parked among them: " + JSON.stringify(fit));
   check(await js(`getComputedStyle(document.querySelector(".col .list")).overflowY === "auto"`), "a column does not scroll its own cards");
   check(await js(`document.querySelector(".agents .ag .on")?.textContent === "Page test: in hand"`), "the agents' strip did not name the card in hand");
   const ahead = (await api("GET", "/api/queue")).queue.filter((q) => q.card !== hand);
