@@ -1,0 +1,56 @@
+<!-- Neuratek Factory. Copyright (c) 2026 Diego Cibils. MIT; see LICENSE. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live, A or B</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- The two drawings of Live, to choose between: A, the flow; B, the lanes. -->
+<style>
+:root { --ground: #f4f5f7; --panel: #ffffff; --line: #dfe2e8; --ink: #161a22; --dim: #6b7383; --accent: #3550d6; --accent-soft: #e6eafb; }
+@media (prefers-color-scheme: dark) { :root { --ground: #0e1116; --panel: #151a21; --line: #252c36; --ink: #e7ebf1; --dim: #8b94a3; --accent: #7d93ff; --accent-soft: #1c2447; } }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--ground); color: var(--ink); font: 13.5px/1.45 "Geist", system-ui, sans-serif; display: flex; flex-direction: column; }
+header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--panel); }
+header h1 { margin: 0; font-size: 15px; font-weight: 600; }
+header p { margin: 0; color: var(--dim); flex: 1; min-width: 240px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: none; color: var(--ink); padding: 6px 14px; font: inherit; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.frames { flex: 1; display: grid; grid-template-columns: 1fr; min-height: 0; }
+.frames.both { grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); }
+.frames figure { margin: 0; display: flex; flex-direction: column; min-height: 0; background: var(--ground); }
+.frames figcaption { padding: 6px 12px; font-weight: 600; font-size: 12.5px; border-bottom: 1px solid var(--line); background: var(--panel); }
+.frames figcaption span { color: var(--dim); font-weight: 400; }
+.frames iframe { flex: 1; width: 100%; border: 0; min-height: 70vh; }
+.frames figure[hidden] { display: none; }
+@media (max-width: 900px) { .frames.both { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Live: A or B</h1>
+  <p>A shows where the effort goes, as one flow. B shows each agent's day as a lane, and what it is doing this minute.</p>
+  <div class="seg" role="group" aria-label="Which to show">
+    <button type="button" data-show="a" aria-pressed="false">A: the flow</button>
+    <button type="button" data-show="b" aria-pressed="true">B: the lanes</button>
+    <button type="button" data-show="both" aria-pressed="false">Side by side</button>
+  </div>
+</header>
+<div class="frames" id="frames">
+  <figure id="fa" hidden><figcaption>A: the flow <span>- whom for, agents, features, where each stands</span></figcaption><iframe src="live.html" title="Live, version A"></iframe></figure>
+  <figure id="fb"><figcaption>B: the lanes <span>- each agent's day, and now</span></figcaption><iframe src="live-b.html" title="Live, version B"></iframe></figure>
+</div>
+<script>
+document.querySelectorAll("[data-show]").forEach((b) => b.addEventListener("click", () => {
+  const s = b.dataset.show;
+  document.querySelectorAll("[data-show]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  document.getElementById("fa").hidden = s === "b";
+  document.getElementById("fb").hidden = s === "a";
+  document.getElementById("frames").classList.toggle("both", s === "both");
+}));
+</script>
+</body>
+</html>
