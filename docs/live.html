@@ -9,36 +9,33 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <!--
-  The drawing of Live, before it is built: every agent at work across every
-  project as one flow - whom the work is for, the agents, the features they
-  are on, and where each stands. Its data is made up and moves by itself, as
-  the real one will from PUT /now. For Diego to agree or change.
+  Live, version B: every agent as a lane across today - each feature a block,
+  coloured by whether the agent was working or waiting on someone - ending in
+  a card that says what it is doing this minute. Made-up data that moves by
+  itself, as the real one will from PUT /now. To compare with live.html.
 -->
 <style>
 :root {
   --ground: #f4f5f7; --panel: #ffffff; --sunk: #eceef2; --line: #dfe2e8; --line2: #cfd4dd;
   --ink: #161a22; --soft: #3d4452; --dim: #6b7383; --accent: #3550d6; --accent-soft: #e6eafb;
-  --amber: #b7660a; --amber-soft: #fdf0dc; --green: #1f8a4c; --green-soft: #e1f4e8; --violet: #6c4fd1; --teal: #0f8a80; --rose: #b04fa0;
+  --amber: #b7660a; --amber-soft: #fdf0dc; --green: #1f8a4c; --green-soft: #e1f4e8; --violet: #6c4fd1; --violet-soft: #eee9fb; --teal: #0f8a80;
   --shadow: 0 1px 2px rgba(20, 26, 40, .06), 0 4px 14px rgba(20, 26, 40, .06);
   --body: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "Geist Mono", ui-monospace, Menlo, monospace;
-  --ribbon: .30; --ribbon-hi: .62;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --ground: #0e1116; --panel: #151a21; --sunk: #1b2129; --line: #252c36; --line2: #323b48;
     --ink: #e7ebf1; --soft: #c0c7d2; --dim: #8b94a3; --accent: #7d93ff; --accent-soft: #1c2447;
-    --amber: #f0b14e; --amber-soft: #2d2412; --green: #5fcf8c; --green-soft: #13281c; --violet: #a993ff; --teal: #4fd0c3; --rose: #e08fd2;
+    --amber: #f0b14e; --amber-soft: #2d2412; --green: #5fcf8c; --green-soft: #13281c; --violet: #a993ff; --violet-soft: #231c3d; --teal: #4fd0c3;
     --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
-    --ribbon: .26; --ribbon-hi: .6;
   }
 }
 :root[data-theme="dark"] {
   --ground: #0e1116; --panel: #151a21; --sunk: #1b2129; --line: #252c36; --line2: #323b48;
   --ink: #e7ebf1; --soft: #c0c7d2; --dim: #8b94a3; --accent: #7d93ff; --accent-soft: #1c2447;
-  --amber: #f0b14e; --amber-soft: #2d2412; --green: #5fcf8c; --green-soft: #13281c; --violet: #a993ff; --teal: #4fd0c3; --rose: #e08fd2;
+  --amber: #f0b14e; --amber-soft: #2d2412; --green: #5fcf8c; --green-soft: #13281c; --violet: #a993ff; --violet-soft: #231c3d; --teal: #4fd0c3;
   --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
-  --ribbon: .26; --ribbon-hi: .6;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
@@ -56,84 +53,105 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 main { max-width: 1440px; margin: 0 auto; padding: 18px 18px 40px; display: flex; flex-direction: column; gap: 14px; }
 header.top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
-header.top h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -.01em; display: flex; align-items: center; gap: 10px; }
-.pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 0 var(--green); animation: pulse 2s infinite; }
+header.top h1 { margin: 0; font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--green) 55%, transparent); } 70% { box-shadow: 0 0 0 9px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
 header.top .sub { color: var(--dim); }
 header.top .sp { flex: 1; }
-.seg { display: inline-flex; border: 1px solid var(--line2); border-radius: 8px; overflow: hidden; background: var(--panel); }
-.seg button { border: 0; background: none; padding: 5px 12px; color: var(--soft); }
-.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; color: var(--soft); font-size: 12.5px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 18px; height: 10px; border-radius: 3px; }
 select.f { border: 1px solid var(--line2); border-radius: 8px; background: var(--panel); color: var(--ink); padding: 5px 8px; font: inherit; }
 
-.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-.tile { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; }
-.tile .k { display: flex; align-items: center; gap: 7px; color: var(--dim); font-size: 12px; }
-.tile .k i { width: 8px; height: 8px; border-radius: 50%; }
-.tile .v { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.tile .v small { font-size: 12.5px; color: var(--dim); font-weight: 400; margin-left: 4px; }
+/* A lane: who, the day's blocks, and the card for this minute. */
+.board { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; }
+.lanes { display: grid; grid-template-columns: 180px minmax(0, 1fr) 380px; }
+.hours { display: contents; }
+.hours > div { border-bottom: 1px solid var(--line); padding: 8px 12px; color: var(--dim); font-size: 11.5px; }
+.axis { position: relative; height: 34px; }
+.axis span { position: absolute; top: 9px; transform: translateX(-50%); font-family: var(--mono); font-size: 11px; color: var(--dim); }
+.lane { display: contents; }
+.lane > div { border-bottom: 1px solid var(--line); }
+.lane:last-child > div { border-bottom: 0; }
+.who { padding: 14px 12px; display: flex; flex-direction: column; gap: 2px; }
+.who b { font-weight: 600; display: flex; align-items: center; gap: 7px; }
+.who b i { width: 8px; height: 8px; border-radius: 50%; }
+.who span { font-size: 12px; color: var(--dim); }
+.who .model { font-family: var(--mono); font-size: 11px; }
+.track { position: relative; min-height: 96px; background:
+  repeating-linear-gradient(to right, transparent 0, transparent calc(var(--hour) - 1px), var(--line) calc(var(--hour) - 1px), var(--line) var(--hour)); }
+.blk { position: absolute; top: 18px; bottom: 18px; border-radius: 7px; padding: 6px 8px; overflow: hidden; font-size: 11.5px; line-height: 1.3; border: 1px solid transparent; cursor: pointer; display: flex; flex-direction: column; justify-content: center; min-width: 6px; }
+.blk b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.blk span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: .8; }
+.blk.working { background: var(--green-soft); border-color: color-mix(in srgb, var(--green) 45%, transparent); }
+.blk.person { background: repeating-linear-gradient(135deg, var(--amber-soft) 0 6px, color-mix(in srgb, var(--amber) 16%, var(--amber-soft)) 6px 12px); border-color: color-mix(in srgb, var(--amber) 50%, transparent); }
+.blk.ci { background: repeating-linear-gradient(135deg, var(--violet-soft) 0 6px, color-mix(in srgb, var(--violet) 16%, var(--violet-soft)) 6px 12px); border-color: color-mix(in srgb, var(--violet) 45%, transparent); }
+.blk.done { background: var(--sunk); border-color: var(--line2); color: var(--soft); }
+.blk.done::after { content: "✓"; position: absolute; right: 7px; top: 5px; color: var(--teal); font-weight: 700; }
+.blk.live { box-shadow: 0 0 0 2px color-mix(in srgb, var(--green) 35%, transparent); }
+.blk.chosen { outline: 2px solid var(--accent); outline-offset: 1px; }
+.nowline { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--accent); z-index: 2; pointer-events: none; }
+.nowline::before { content: "now"; position: absolute; top: -1px; left: 4px; font: 600 10px var(--mono); color: var(--accent); }
+.edge { position: absolute; top: 18px; bottom: 18px; width: 14px; margin-left: -7px; z-index: 1; pointer-events: none; background: linear-gradient(to right, transparent, color-mix(in srgb, var(--green) 30%, transparent)); animation: grow 1.6s ease-in-out infinite; border-radius: 0 7px 7px 0; }
+@keyframes grow { 50% { opacity: .2; } }
 
-.flow { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 12px 6px 6px; overflow-x: auto; }
-.flow svg { display: block; width: 100%; min-width: 980px; height: auto; }
-.colhead { font: 600 11px var(--body); letter-spacing: .06em; text-transform: uppercase; fill: var(--dim); }
-.node rect.box { fill: var(--sunk); stroke: var(--line); }
-.node.hi rect.box { stroke: var(--line2); fill: var(--panel); }
-.node.lo { opacity: .38; }
-.node text { fill: var(--ink); font-family: var(--body); }
-.node .t1 { font-size: 12.5px; font-weight: 600; }
-.node .t2 { font-size: 11px; fill: var(--dim); font-family: var(--mono); }
-.node .t3 { font-size: 11px; fill: var(--soft); }
-.node { cursor: pointer; }
-.link { mix-blend-mode: normal; transition: opacity .2s; }
-.link path.band { opacity: var(--ribbon); transition: opacity .2s; }
-.link.hi path.band { opacity: var(--ribbon-hi); }
-.link.lo path.band { opacity: .07; }
-.link path.run { fill: none; stroke-linecap: round; stroke-dasharray: 2 14; opacity: .75; animation: run 1.1s linear infinite; }
-.link.lo path.run { opacity: 0; }
-@keyframes run { to { stroke-dashoffset: -16; } }
+.card { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; border-left: 1px solid var(--line); }
+.card .state { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+.card .state i { width: 7px; height: 7px; border-radius: 50%; }
+.card .title { font-weight: 600; font-size: 14px; }
+.card .step { font-family: var(--mono); font-size: 12px; color: var(--soft); min-height: 18px; }
+.card .step .caret { display: inline-block; width: 7px; height: 13px; background: var(--green); vertical-align: -2px; margin-left: 2px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.card .wait { background: var(--amber-soft); border-radius: 6px; padding: 3px 8px; font-size: 12.5px; }
+.card .wait.ci { background: var(--violet-soft); }
+.stages { display: flex; align-items: center; gap: 0; margin-top: 2px; }
+.stages span { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--dim); white-space: nowrap; }
+.stages span::before { content: ""; width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--line2); background: var(--panel); }
+.stages span.past::before { background: var(--teal); border-color: var(--teal); }
+.stages span.at { color: var(--ink); font-weight: 600; }
+.stages span.at::before { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.stages hr { flex: 1; min-width: 10px; border: 0; border-top: 1.5px solid var(--line2); margin: 0 6px; }
+.stages hr.past { border-color: var(--teal); }
+.card .foot { display: flex; gap: 10px; color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+.card .acts { display: flex; gap: 8px; }
+.btn { border: 1px solid var(--line2); background: var(--panel); border-radius: 7px; padding: 4px 10px; font-size: 12.5px; font-weight: 500; }
+.btn.go { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-.now { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 14px; align-items: start; }
-.rows { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
-.rows h2, .side h2 { margin: 0; padding: 12px 14px 8px; font-size: 13px; font-weight: 600; }
-.row { display: grid; grid-template-columns: 190px minmax(0, 1fr) auto; gap: 12px; padding: 10px 14px; border-top: 1px solid var(--line); align-items: baseline; cursor: pointer; }
-.row:hover, .row.hi { background: var(--sunk); }
-.row .who { display: flex; align-items: center; gap: 8px; font-weight: 600; }
-.row .who i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
-.row .what b { font-weight: 600; }
-.row .what .step { color: var(--soft); }
-.row .what .wt { display: inline-block; margin-top: 3px; padding: 1px 8px; border-radius: 6px; background: var(--amber-soft); }
-.row .when { color: var(--dim); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
-.row .proj { color: var(--dim); font-weight: 400; font-size: 12px; }
-.fresh { animation: fresh 1.4s ease-out; }
+.below { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 14px; align-items: start; }
+.feed, .side { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+.feed h2, .side h2 { margin: 0; padding: 12px 14px 6px; font-size: 13px; font-weight: 600; }
+.feed ol { list-style: none; margin: 0; padding: 0 14px 10px; display: flex; flex-direction: column; }
+.feed li { display: grid; grid-template-columns: 52px 150px minmax(0, 1fr); gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 12.5px; }
+.feed li:first-child { border-top: 0; }
+.feed time { font-family: var(--mono); font-size: 11.5px; color: var(--dim); }
+.feed .a { font-weight: 600; }
+.feed .fresh { animation: fresh 1.6s ease-out; }
 @keyframes fresh { from { background: var(--accent-soft); } to { background: transparent; } }
-
-.side { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; position: sticky; top: 12px; }
-.side .body { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 10px; }
-.side .title { font-size: 16px; font-weight: 600; text-wrap: balance; }
-.side dl { display: grid; grid-template-columns: 92px 1fr; gap: 4px 10px; margin: 0; font-size: 12.5px; }
+.side .body { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 8px; }
+.side .t { font-weight: 600; font-size: 15px; }
+.side dl { display: grid; grid-template-columns: 90px 1fr; gap: 3px 10px; margin: 0; font-size: 12.5px; }
 .side dt { color: var(--dim); }
 .side dd { margin: 0; }
-.steps { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
-.steps li { position: relative; padding-left: 12px; font-size: 12.5px; }
-.steps li::before { content: ""; position: absolute; left: -5px; top: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--line2); }
-.steps li:first-child::before { background: var(--green); }
-.steps time { color: var(--dim); font-family: var(--mono); font-size: 11px; margin-right: 6px; }
-.btn { border: 1px solid var(--line2); background: var(--panel); border-radius: 8px; padding: 6px 12px; font-weight: 500; }
-.btn.go { background: var(--accent); border-color: var(--accent); color: #fff; }
 
 .notes { background: var(--panel); border: 1px dashed var(--line2); border-radius: 12px; padding: 12px 16px; color: var(--soft); max-width: 900px; }
 .notes h2 { margin: 0 0 6px; font-size: 13px; color: var(--ink); }
 .notes ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
 
-@media (max-width: 900px) {
-  main { padding: 12px 16px 32px; }
-  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .now { grid-template-columns: 1fr; }
-  .row { grid-template-columns: 1fr; gap: 2px; }
-  .row .when { text-align: left; }
-  .side { position: static; }
+@media (max-width: 1100px) {
+  .lanes { grid-template-columns: 150px minmax(0, 1fr); }
+  .card { grid-column: 1 / -1; border-left: 0; border-top: 1px dashed var(--line); }
+  .hours > div:last-child { display: none; }
+  .below { grid-template-columns: 1fr; }
 }
-@media (prefers-reduced-motion: reduce) { .link path.run, .pulse, .fresh { animation: none; } }
+@media (max-width: 700px) {
+  main { padding: 12px 16px 32px; }
+  .lanes { grid-template-columns: 1fr; }
+  .who { padding-bottom: 0; }
+  .hours > div:first-child { display: none; }
+  .feed li { grid-template-columns: 46px minmax(0, 1fr); }
+  .feed li .a { grid-column: 2; }
+}
+@media (prefers-reduced-motion: reduce) { .pulse, .edge, .caret, .fresh { animation: none; } }
 </style>
 </head>
 <body>
@@ -151,284 +169,189 @@ select.f { border: 1px solid var(--line2); border-radius: 8px; background: var(-
     <h1><span class="pulse" aria-hidden="true"></span>Live</h1>
     <span class="sub" id="sub"></span>
     <span class="sp"></span>
-    <select class="f" id="proj" aria-label="Project">
-      <option value="">Every project</option>
-    </select>
-    <div class="seg" role="group" aria-label="What the ribbons weigh">
-      <button type="button" data-by="minutes" aria-pressed="true">Time today</button>
-      <button type="button" data-by="tokens" aria-pressed="false">Tokens</button>
-      <button type="button" data-by="cost" aria-pressed="false">Cost</button>
+    <div class="legend" aria-label="What the colours mean">
+      <span><i style="background:var(--green-soft);border:1px solid var(--green)"></i>Working</span>
+      <span><i style="background:var(--amber-soft);border:1px solid var(--amber)"></i>Waiting on a person</span>
+      <span><i style="background:var(--violet-soft);border:1px solid var(--violet)"></i>Waiting on CI</span>
+      <span><i style="background:var(--sunk);border:1px solid var(--line2)"></i>Done</span>
     </div>
+    <select class="f" id="proj" aria-label="Project"><option value="">Every project</option></select>
   </header>
 
-  <section class="tiles" aria-label="Today, in short" id="tiles"></section>
-
-  <section class="flow" aria-label="The work flowing from people through agents to features">
-    <svg id="sankey" role="img" aria-label="Who the work is for, the agents, the features they are on, and where each stands"></svg>
+  <section class="board" aria-label="Every agent's day, and what it is doing now">
+    <div class="lanes" id="lanes"></div>
   </section>
 
-  <section class="now">
-    <div class="rows" aria-label="What each agent is doing now">
-      <h2>Right now</h2>
-      <div id="rows"></div>
-    </div>
-    <aside class="side" aria-label="The feature chosen" id="side"></aside>
+  <section class="below">
+    <div class="feed" aria-label="Every step, as it is said"><h2>Every step, as it is said</h2><ol id="feed"></ol></div>
+    <aside class="side" id="side" aria-label="The feature chosen"></aside>
   </section>
 
   <section class="notes">
-    <h2>For Diego to decide</h2>
+    <h2>Against version A</h2>
     <ul>
-      <li><b>Where it lives</b>: <i>Live</i> in the sidebar under My work, across every project; and the same flow, filtered, on each project's board behind its agents banner.</li>
-      <li><b>What the ribbons weigh</b>: time today works now, from what agents already say. Tokens and cost need agents to report them - Claude Code can, from a hook after each turn - and that is the <i>cost and usage</i> step of phase 3.</li>
-      <li><b>The last column</b>: working, waiting on a person, waiting on CI, done today. Review joins it with the GitHub step.</li>
-      <li><b>Live</b> means the page asks every few seconds today; a WebSocket from the Worker (a Durable Object) later, if that is not quick enough.</li>
+      <li><b>A</b> answers <i>where is the effort going</i> - by person, agent and state, as shares of the whole.</li>
+      <li><b>B</b> answers <i>what is each agent doing, and what did it do today</i> - one lane each, the waits visible as gaps someone owes, the current step typed in as it arrives.</li>
+      <li>B needs nothing agents do not say already: each block is the time between two <code>PUT /now</code>s.</li>
     </ul>
   </section>
 </main>
 
 <script>
-// ---- Made-up data: whom for, the agents, what each is on --------------------------
-const STATES = {
-  working: { name: "Working", colour: "--green" },
-  person:  { name: "Waiting on a person", colour: "--amber" },
-  ci:      { name: "Waiting on CI", colour: "--violet" },
-  done:    { name: "Done today", colour: "--teal" },
-};
-const PEOPLE = [
-  { id: "marta", name: "Marta Gómez", project: "Demo: bank account" },
-  { id: "tomas", name: "Tomás Ruiz", project: "Demo: bank account" },
-  { id: "ana", name: "Ana Silva", project: "Neuratek website" },
-  { id: "ben", name: "Ben Costa", project: "Mobile app" },
-];
+const STATES = { working: { name: "Working", colour: "--green" }, person: { name: "Waiting on a person", colour: "--amber" },
+                 ci: { name: "Waiting on CI", colour: "--violet" }, done: { name: "Done", colour: "--teal" } };
+const STAGES = ["Next", "Building", "Review", "Done"];
+const PEOPLE = { marta: ["Marta Gómez", "Demo: bank account"], tomas: ["Tomás Ruiz", "Demo: bank account"], ana: ["Ana Silva", "Neuratek website"], ben: ["Ben Costa", "Mobile app"] };
+// Today, from 08:00: each agent's blocks in minutes since 08:00. The last
+// block of an agent still at work runs to now.
+const START = 8 * 60;
+let NOW = 14 * 60 + 12;
 const AGENTS = [
-  { id: "c-marta", name: "Claude (Marta)", model: "Claude Opus 5.5", for: "marta", colour: "--rose" },
-  { id: "g-tomas", name: "Gemini (Tomás)", model: "Gemini 3 Pro", for: "tomas", colour: "--accent" },
-  { id: "c-ana", name: "Claude (Ana)", model: "Claude Sonnet 5.5", for: "ana", colour: "--rose" },
-  { id: "x-ben", name: "Codex (Ben)", model: "GPT-5.5", for: "ben", colour: "--teal" },
-  { id: "c-ben", name: "Claude (Ben)", model: "Claude Sonnet 5.5", for: "ben", colour: "--rose" },
+  { id: "c-marta", name: "Claude (Marta)", model: "Claude Opus 5.5", for: "marta", colour: "--green",
+    blocks: [
+      { f: "Welcome screen and choice of account", ref: "A1", state: "done", from: 8 * 60 + 40, to: 9 * 60 + 32 },
+      { f: "Identity scan and selfie match", ref: "I2", state: "working", from: 9 * 60 + 40, to: 11 * 60 + 5 },
+      { f: "Identity scan and selfie match", ref: "I2", state: "person", from: 11 * 60 + 5, to: 12 * 60 + 4, wait: "Marta: lower the match threshold?" },
+      { f: "Identity scan and selfie match", ref: "I2", state: "working", from: 12 * 60 + 4, live: true, stage: 1,
+        step: "checking the two forged documents are refused" } ] },
+  { id: "g-tomas", name: "Gemini (Tomás)", model: "Gemini 3 Pro", for: "tomas", colour: "--accent",
+    blocks: [
+      { f: "Load test the SMS sender", ref: "task", state: "done", from: 8 * 60 + 15, to: 8 * 60 + 53 },
+      { f: "Screening against sanctions lists", ref: "C1", state: "working", from: 9 * 60, to: 12 * 60 + 5 },
+      { f: "Screening against sanctions lists", ref: "C1", state: "person", from: 12 * 60 + 5, live: true, stage: 1,
+        step: "partial matches", wait: "a decision: refuse or review a partial match", asked: "Tomás" } ] },
+  { id: "c-ana", name: "Claude (Ana)", model: "Claude Sonnet 5.5", for: "ana", colour: "--green",
+    blocks: [
+      { f: "Hero copy in Spanish", ref: "W5", state: "done", from: 10 * 60, to: 11 * 60 + 10 },
+      { f: "Pricing page in three currencies", ref: "W7", state: "working", from: 12 * 60 + 48, live: true, stage: 1,
+        step: "rounding rules for EUR and UYU" } ] },
+  { id: "x-ben", name: "Codex (Ben)", model: "GPT-5.5", for: "ben", colour: "--teal",
+    blocks: [
+      { f: "Push notification opt-in", ref: "N3", state: "working", from: 11 * 60 + 30, to: 13 * 60 + 24 },
+      { f: "Push notification opt-in", ref: "N3", state: "ci", from: 13 * 60 + 24, live: true, stage: 2,
+        step: "pushed; CI running", wait: "CI: the iOS build, 6 of 9 jobs" } ] },
+  { id: "c-ben", name: "Claude (Ben)", model: "Claude Sonnet 5.5", for: "ben", colour: "--green",
+    blocks: [
+      { f: "Crash on login with Face ID", ref: "B12", state: "done", from: 9 * 60 + 20, to: 9 * 60 + 54 },
+      { f: "Statements offline", ref: "M4", state: "working", from: 13 * 60 + 46, live: true, stage: 1,
+        step: "caching the last three months" } ] },
 ];
-const FEATURES = [
-  { id: "f1", agent: "c-marta", title: "Identity scan and selfie match", ref: "I2", state: "working", minutes: 184, tokens: 412000, cost: 6.18,
-    step: "checking the two forged documents are refused", steps: ["checking the two forged documents are refused", "the five test applicants pass", "a hint to take glasses off", "selfie match fails for one applicant"] },
-  { id: "f2", agent: "c-marta", title: "Welcome screen and choice of account", ref: "A1", state: "done", minutes: 52, tokens: 96000, cost: 1.44, step: "merged", steps: ["merged", "screenshots in both themes"] },
-  { id: "f3", agent: "g-tomas", title: "Screening against sanctions lists", ref: "C1", state: "person", minutes: 121, tokens: 158000, cost: 0.95, step: "partial matches",
-    waiting: "a decision: refuse or review a partial match", steps: ["asked: refuse or review a partial match?", "exact matches stop the opening", "the lists loaded"] },
-  { id: "f4", agent: "g-tomas", title: "Load test the SMS sender", ref: "task", state: "done", minutes: 38, tokens: 41000, cost: 0.25, step: "50 a second held", steps: ["50 a second held", "a queue for bursts"] },
-  { id: "f5", agent: "c-ana", title: "Pricing page in three currencies", ref: "W7", state: "working", minutes: 83, tokens: 133000, cost: 0.80, step: "rounding rules for EUR and UYU", steps: ["rounding rules for EUR and UYU", "the table drawn", "prices from the plan file"] },
-  { id: "f6", agent: "x-ben", title: "Push notification opt-in", ref: "N3", state: "ci", minutes: 47, tokens: 88000, cost: 0.44, step: "the iOS build", waiting: "CI: the iOS build, 6 of 9 jobs", steps: ["pushed; CI running", "the prompt after the first transfer"] },
-  { id: "f7", agent: "c-ben", title: "Crash on login with Face ID", ref: "B12", state: "done", minutes: 34, tokens: 52000, cost: 0.31, step: "fixed and tested", steps: ["fixed and tested", "reproduced on iOS 19"] },
-  { id: "f8", agent: "c-ben", title: "Statements offline", ref: "M4", state: "working", minutes: 26, tokens: 61000, cost: 0.37, step: "caching the last three months", steps: ["caching the last three months", "read the card"] },
-];
+const FEED = [
+  [12 * 60 + 5, "Gemini (Tomás)", "asked Tomás: refuse or review a partial sanctions match?"],
+  [12 * 60 + 4, "Claude (Marta)", "Marta answered: keep the threshold, ask to take glasses off"],
+  [12 * 60 + 48, "Claude (Ana)", "took Pricing page in three currencies from the queue"],
+  [13 * 60 + 24, "Codex (Ben)", "pushed Push notification opt-in; CI running"],
+  [13 * 60 + 46, "Claude (Ben)", "took Statements offline from the queue"],
+  [14 * 60 + 8, "Claude (Marta)", "the five test applicants pass"],
+].sort((a, b) => b[0] - a[0]);
 
-let BY = "minutes", PROJ = "", CHOSEN = "f1", HOVER = null;
-const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-const fmt = { minutes: (m) => m < 60 ? m + " min" : Math.floor(m / 60) + " h " + (m % 60) + " min",
-              tokens: (t) => t >= 1000000 ? (t / 1e6).toFixed(2) + "M" : Math.round(t / 1000) + "K", cost: (c) => "$" + c.toFixed(2) };
-const val = (f) => f[BY];
-const agentOf = (id) => AGENTS.find((a) => a.id === id);
-const personOf = (id) => PEOPLE.find((p) => p.id === id);
+let PROJ = "", CHOSEN = "c-marta", TYPING = {};
+const hm = (m) => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+const dur = (m) => m < 60 ? m + " min" : Math.floor(m / 60) + " h " + (m % 60) + " min";
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const shown = () => AGENTS.filter((a) => !PROJ || PEOPLE[a.for][1] === PROJ);
+const current = (a) => a.blocks.find((b) => b.live);
+const end = (b) => b.live ? NOW : b.to;
 
-function shown() {
-  return FEATURES.filter((f) => !PROJ || personOf(agentOf(f.agent).for).project === PROJ);
-}
-
-// ---- The flow: four columns of nodes, ribbons between them ------------------------
-const W = 1200, PAD = 8, NODE_W = 220, GAP = 10, TOP = 30;
-const X = [PAD, 330, 650, W - PAD - 200];
-const WIDTHS = [NODE_W, NODE_W, 250, 200];
-
-function layout() {
-  const fs = shown();
-  const total = fs.reduce((s, f) => s + val(f), 0) || 1;
-  const cols = [[], [], [], []];
-  const sum = (list) => list.reduce((s, f) => s + val(f), 0);
-  for (const p of PEOPLE) { const list = fs.filter((f) => agentOf(f.agent).for === p.id); if (list.length) cols[0].push({ kind: "person", id: p.id, p, list }); }
-  for (const a of AGENTS) { const list = fs.filter((f) => f.agent === a.id); if (list.length) cols[1].push({ kind: "agent", id: a.id, a, list }); }
-  for (const f of fs) cols[2].push({ kind: "feature", id: f.id, f, list: [f] });
-  for (const k of Object.keys(STATES)) { const list = fs.filter((f) => f.state === k); if (list.length) cols[3].push({ kind: "state", id: k, s: STATES[k], list }); }
-  // Each column fills the same height: a node is as tall as its share, but
-  // never less than its words need.
-  const H = 560;
-  for (const col of cols) {
-    const room = H - GAP * (col.length - 1);
-    const MIN = col[0] && col[0].kind === "feature" ? 58 : 54;
-    let y = TOP;
-    for (const n of col) { n.v = sum(n.list); n.h = Math.max(MIN, room * n.v / total); }
-    const over = col.reduce((s, n) => s + n.h, 0) - room;
-    if (over > 0) { const big = col.filter((n) => n.h > MIN); const share = big.reduce((s, n) => s + n.h - MIN, 0); for (const n of big) n.h -= over * (n.h - MIN) / share; }
-    for (const n of col) { n.y = y; y += n.h + GAP; }
+function lanes() {
+  const span = NOW + 30 - START;
+  const pct = (m) => (100 * (m - START) / span).toFixed(3) + "%";
+  const hourW = (100 * 60 / span).toFixed(3) + "%";
+  let html = `<div class="hours"><div>Agent</div><div class="axis">`;
+  for (let h = 8; h * 60 <= NOW + 30; h++) html += `<span style="left:${pct(h * 60)}">${String(h).padStart(2, "0")}:00</span>`;
+  html += `</div><div>Now</div></div>`;
+  for (const a of shown()) {
+    const c = current(a);
+    const p = PEOPLE[a.for];
+    const blocks = a.blocks.map((b, i) => {
+      const w = end(b) - b.from;
+      const title = w >= 40 ? `<b>${esc(b.f)}</b><span>${esc(b.state === "person" || b.state === "ci" ? "waiting · " + (b.wait || "") : b.ref + " · " + dur(w))}</span>` : "";
+      return `<div class="blk ${b.state}${b.live && b.state === "working" ? " live" : ""}${a.id === CHOSEN && b.live ? " chosen" : ""}" style="left:${pct(b.from)};width:calc(${pct(end(b))} - ${pct(b.from)} - 2px)" data-agent="${a.id}" title="${esc(b.f)} · ${STATES[b.state].name} · ${hm(b.from)}-${hm(end(b))}">${title}</div>`;
+    }).join("");
+    const edge = c && c.state === "working" ? `<div class="edge" style="left:${pct(NOW)}"></div>` : "";
+    const stageAt = c ? c.stage : 3;
+    const stages = STAGES.map((s, i) => `${i ? `<hr class="${i <= stageAt ? "past" : ""}">` : ""}<span class="${i < stageAt ? "past" : i === stageAt ? "at" : ""}">${s}</span>`).join("");
+    const typed = TYPING[a.id] !== undefined ? TYPING[a.id] : (c ? c.step : "");
+    html += `<div class="lane">
+      <div class="who"><b><i style="background:var(${c ? STATES[c.state].colour : "--line2"})"></i>${esc(a.name)}</b><span class="model">${esc(a.model)}</span><span>for ${esc(p[0])} · ${esc(p[1])}</span></div>
+      <div class="track" style="--hour:${hourW}">${blocks}${edge}<div class="nowline" style="left:${pct(NOW)}"></div></div>
+      <div class="card">${c ? `
+        <span class="state" style="color:var(${STATES[c.state].colour})"><i style="background:var(${STATES[c.state].colour})"></i>${STATES[c.state].name}</span>
+        <span class="title">${esc(c.f)} <span class="dim mono" style="font-weight:400;font-size:11px">${esc(c.ref)}</span></span>
+        ${c.state === "working" ? `<span class="step">${esc(typed)}<span class="caret"></span></span>` : `<span class="wait${c.state === "ci" ? " ci" : ""}"><span class="dim">Waiting on:</span> ${esc(c.wait)}</span>`}
+        <div class="stages" aria-label="Where the feature is">${stages}</div>
+        <div class="foot"><span>since ${hm(c.from)} · ${dur(NOW - c.from)}</span><span class="sp" style="flex:1"></span>
+          ${c.state === "person" ? `<button class="btn go" type="button">Answer ${esc(c.asked || "")}</button>` : ""}<button class="btn" type="button" data-open="${a.id}">Open</button></div>` :
+        `<span class="dim">Idle - the queue is empty.</span>`}</div>
+    </div>`;
   }
-  return { cols, total, H: TOP + H + 8 };
+  document.getElementById("lanes").innerHTML = html;
+  document.querySelectorAll("[data-agent], [data-open]").forEach((n) => n.addEventListener("click", () => { CHOSEN = n.dataset.agent || n.dataset.open; render(); }));
 }
 
-function band(x0, y0a, y0b, x1, y1a, y1b) {
-  const mx = (x0 + x1) / 2;
-  return `M${x0},${y0a} C${mx},${y0a} ${mx},${y1a} ${x1},${y1a} L${x1},${y1b} C${mx},${y1b} ${mx},${y0b} ${x0},${y0b} Z`;
-}
-
-function linked(n) {
-  // The features a node stands for: hovering any node lights its whole chain.
-  return new Set(n.list.map((f) => f.id));
-}
-
-function draw() {
-  const { cols, H } = layout();
-  const svg = document.getElementById("sankey");
-  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-  const lit = HOVER ? HOVER : null;
-  let out = "";
-  ["For", "Agents", "Features", "Where it stands"].forEach((t, i) => { out += `<text class="colhead" x="${X[i] + 2}" y="14">${t}</text>`; });
-
-  // Ribbons: each feature makes three - person to agent, agent to feature,
-  // feature to state - stacked within each node in the same order.
-  const cursor = new Map();
-  const take = (node, side, v) => {
-    const k = node.kind + node.id + side;
-    const at = cursor.get(k) || 0;
-    const scale = node.h / node.v;
-    cursor.set(k, at + v * scale);
-    return [node.y + at, node.y + at + v * scale];
-  };
-  const find = (c, id) => cols[c].find((n) => n.id === id);
-  let ribbons = "";
-  for (const fn of cols[2]) {
-    const f = fn.f, a = agentOf(f.agent), v = val(f);
-    const pn = find(0, a.for), an = find(1, a.id), sn = find(3, f.state);
-    const colour = css(STATES[f.state].colour), acolour = css(a.colour);
-    const cls = lit ? (lit.has(f.id) ? " hi" : " lo") : "";
-    const legs = [
-      [pn, "out", an, "in", acolour, 0], [an, "out", fn, "in", colour, 1], [fn, "out", sn, "in", colour, 2],
-    ];
-    for (const [s, so, t, ti, c, i] of legs) {
-      const [a0, a1] = take(s, so, v), [b0, b1] = take(t, ti, v);
-      const x0 = X[i] + WIDTHS[i], x1 = X[i + 1];
-      ribbons += `<g class="link${cls}" data-f="${f.id}"><path class="band" fill="${c}" d="${band(x0, a0, a1, x1, b0, b1)}"/>` +
-        (f.state === "working" ? `<path class="run" stroke="${c}" stroke-width="${Math.max(1.5, Math.min(3, (a1 - a0) / 6))}" d="M${x0},${(a0 + a1) / 2} C${(x0 + x1) / 2},${(a0 + a1) / 2} ${(x0 + x1) / 2},${(b0 + b1) / 2} ${x1},${(b0 + b1) / 2}"/>` : "") + `</g>`;
-    }
-  }
-  out += ribbons;
-
-  cols.forEach((col, i) => col.forEach((n) => {
-    const cls = lit ? ([...linked(n)].some((id) => lit.has(id)) ? " hi" : " lo") : "";
-    const w = WIDTHS[i], x = X[i];
-    let t1 = "", t2 = "", t3 = "", dot = "";
-    if (n.kind === "person") { t1 = n.p.name; t2 = n.p.project; dot = css("--line2"); }
-    if (n.kind === "agent") { t1 = n.a.name; t2 = n.a.model; dot = css(n.a.colour); }
-    if (n.kind === "feature") { t1 = n.f.title; t2 = n.f.ref + " · " + fmt[BY](val(n.f)); t3 = n.f.waiting ? "waiting on " + n.f.waiting : n.f.step; dot = css(STATES[n.f.state].colour); }
-    if (n.kind === "state") { t1 = n.s.name; t2 = n.list.length + (n.list.length === 1 ? " feature" : " features"); dot = css(n.s.colour); }
-    const share = Math.round(100 * n.v / layout().total);
-    const right = n.kind === "feature" ? "" : `<text class="t2" x="${x + w - 10}" y="${n.y + 33}" text-anchor="end">${fmt[BY](n.v)}</text>`;
-    const tall = n.h >= 58;
-    out += `<g class="node${cls}${n.kind === "feature" && n.id === CHOSEN ? " hi" : ""}" data-kind="${n.kind}" data-id="${n.id}" tabindex="0" role="button" aria-label="${t1}">
-      <rect class="box" x="${x}" y="${n.y}" width="${w}" height="${n.h}" rx="8"/>
-      <rect x="${x}" y="${n.y}" width="3" height="${n.h}" rx="1.5" fill="${dot}"/>
-      <text class="t1" x="${x + 12}" y="${n.y + 18}">${clip(t1, n.kind === "feature" ? 34 : 24)}</text>
-      ${right}
-      <text class="t2" x="${x + 12}" y="${n.y + 33}">${clip(t2, n.kind === "feature" ? 34 : 20)}</text>
-      ${tall && t3 ? `<text class="t3" x="${x + 12}" y="${n.y + 48}">${clip(t3, 38)}</text>` : ""}
-      ${tall && n.kind !== "feature" ? `<text class="t2" x="${x + w - 10}" y="${n.y + n.h - 9}" text-anchor="end">${share}% of all</text>` : ""}
-    </g>`;
-  }));
-  svg.innerHTML = out;
-  svg.querySelectorAll(".node").forEach((g) => {
-    const n = cols.flat().find((m) => m.kind === g.dataset.kind && m.id === g.dataset.id);
-    g.addEventListener("mouseenter", () => { HOVER = linked(n); draw(); });
-    g.addEventListener("mouseleave", () => { HOVER = null; draw(); });
-    g.addEventListener("click", () => { if (n.kind === "feature") { CHOSEN = n.id; render(); } });
-    g.addEventListener("keydown", (e) => { if (e.key === "Enter" && n.kind === "feature") { CHOSEN = n.id; render(); } });
-  });
-}
-
-function clip(t, n) { t = String(t); return esc(t.length > n ? t.slice(0, n - 1) + "…" : t); }
-function esc(t) { return t.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]); }
-
-// ---- The rest: the tiles, what each is doing now, the chosen feature --------------
-function tiles() {
-  const fs = shown();
-  const count = (k) => fs.filter((f) => f.state === k).length;
-  const agents = new Set(fs.filter((f) => f.state !== "done").map((f) => f.agent)).size;
-  const tokens = fs.reduce((s, f) => s + f.tokens, 0), cost = fs.reduce((s, f) => s + f.cost, 0);
-  document.getElementById("tiles").innerHTML = [
-    ["Working", count("working"), "--green", agents + " agents at work"],
-    ["Waiting on a person", count("person"), "--amber", "answer them in Decisions"],
-    ["Done today", count("done"), "--teal", ""],
-    ["Spent today", fmt.cost(cost), "--violet", fmt.tokens(tokens) + " tokens"],
-  ].map(([k, v, c, s]) => `<div class="tile"><span class="k"><i style="background:var(${c})"></i>${k}</span><span class="v">${v}<small>${s}</small></span></div>`).join("");
-  const projects = new Set(fs.map((f) => personOf(agentOf(f.agent).for).project)).size;
-  document.getElementById("sub").textContent = `${agents} agents in ${projects} ${projects === 1 ? "project" : "projects"} · updated just now`;
-}
-
-function rows(fresh) {
-  const fs = shown().filter((f) => f.state !== "done");
-  document.getElementById("rows").innerHTML = fs.map((f) => {
-    const a = agentOf(f.agent), p = personOf(a.for);
-    return `<div class="row${f.id === CHOSEN ? " hi" : ""}${f.id === fresh ? " fresh" : ""}" data-f="${f.id}" tabindex="0" role="button">
-      <span class="who"><i style="background:var(${STATES[f.state].colour})"></i><span>${esc(a.name)}<br><span class="proj">${esc(p.project)}</span></span></span>
-      <span class="what"><b>${esc(f.title)}</b> <span class="step">· ${esc(f.step)}</span>${f.waiting ? `<br><span class="wt"><span class="dim">Waiting on:</span> ${esc(f.waiting)}</span>` : ""}</span>
-      <span class="when">${fmt.minutes(f.minutes)}</span></div>`;
-  }).join("");
-  document.querySelectorAll(".row").forEach((r) => {
-    r.addEventListener("click", () => { CHOSEN = r.dataset.f; render(); });
-    r.addEventListener("mouseenter", () => { HOVER = new Set([r.dataset.f]); draw(); });
-    r.addEventListener("mouseleave", () => { HOVER = null; draw(); });
-  });
+function feed(fresh) {
+  const names = new Set(shown().map((a) => a.name));
+  document.getElementById("feed").innerHTML = FEED.filter(([, a]) => names.has(a)).slice(0, 9).map(([t, a, s], i) =>
+    `<li class="${fresh && i === 0 ? "fresh" : ""}"><time>${hm(t)}</time><span class="a">${esc(a)}</span><span>${esc(s)}</span></li>`).join("");
 }
 
 function side() {
-  const f = FEATURES.find((x) => x.id === CHOSEN);
-  const a = agentOf(f.agent), p = personOf(a.for);
-  const now = new Date();
-  const at = (i) => { const d = new Date(now - i * 17 * 60000); return d.toTimeString().slice(0, 5); };
-  document.getElementById("side").innerHTML = `<h2>The feature</h2><div class="body">
-    <div class="title">${esc(f.title)}</div>
-    <dl><dt>Where</dt><dd>${esc(STATES[f.state].name)}</dd>
-      <dt>Agent</dt><dd>${esc(a.name)} · <span class="dim">${esc(a.model)}</span></dd>
-      <dt>For</dt><dd>${esc(p.name)} · ${esc(p.project)}</dd>
-      <dt>On it</dt><dd>${fmt.minutes(f.minutes)}</dd>
-      <dt>Tokens</dt><dd class="mono">${fmt.tokens(f.tokens)} · ${fmt.cost(f.cost)}</dd>
-      ${f.waiting ? `<dt>Waiting on</dt><dd>${esc(f.waiting)}</dd>` : ""}</dl>
-    <ol class="steps">${f.steps.map((s, i) => `<li><time>${at(i)}</time>${esc(s)}</li>`).join("")}</ol>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">${f.state === "person" ? `<button class="btn go" type="button">Answer it</button>` : ""}<button class="btn" type="button">Open the card</button></div>
+  const a = AGENTS.find((x) => x.id === CHOSEN) || shown()[0];
+  const c = current(a);
+  const p = PEOPLE[a.for];
+  const today = a.blocks.reduce((s, b) => s + (b.state === "working" ? end(b) - b.from : 0), 0);
+  const waited = a.blocks.reduce((s, b) => s + (b.state === "person" || b.state === "ci" ? end(b) - b.from : 0), 0);
+  document.getElementById("side").innerHTML = `<h2>${esc(a.name)}</h2><div class="body">
+    <span class="t">${c ? esc(c.f) : "Idle"}</span>
+    <dl><dt>For</dt><dd>${esc(p[0])} · ${esc(p[1])}</dd><dt>Model</dt><dd>${esc(a.model)}</dd>
+      <dt>Worked today</dt><dd>${dur(today)}</dd><dt>Waited today</dt><dd>${dur(waited)}${waited > 45 ? ` <span class="dim">- mostly on people</span>` : ""}</dd>
+      <dt>Features</dt><dd>${[...new Set(a.blocks.map((b) => b.f))].length} today, ${a.blocks.filter((b) => b.state === "done").length} done</dd></dl>
   </div>`;
 }
 
-function render(fresh) { tiles(); draw(); rows(fresh); side(); }
+function render(fresh) {
+  const ps = shown(), projects = new Set(ps.map((a) => PEOPLE[a.for][1]));
+  const waiting = ps.filter((a) => current(a) && current(a).state === "person").length;
+  document.getElementById("sub").textContent = `${ps.length} agents in ${projects.size} ${projects.size === 1 ? "project" : "projects"} · ${waiting} waiting on a person · ${hm(NOW)}`;
+  lanes(); feed(fresh); side();
+}
 
-// ---- It moves: minutes tick, a step changes now and then --------------------------
-const NEXT_STEPS = {
-  f1: ["the forged passport refused", "the forged ID card refused", "running the identity suite", "writing what was done on the card"],
-  f5: ["the UYU table checked", "screenshots in both themes", "a pull request opened"],
-  f8: ["statements read without a network", "the sync after it comes back", "testing on a slow connection"],
+// ---- It moves: a minute passes every few seconds; a working agent says a new step, typed in.
+const NEXT = {
+  "c-marta": ["the forged passport is refused", "the forged ID card is refused", "running the identity suite", "writing up what was done"],
+  "c-ana": ["the UYU table checked", "screenshots in both themes", "a pull request opened"],
+  "c-ben": ["statements read without a network", "the sync once it comes back", "testing on a slow connection"],
 };
+function type(agent, text) {
+  let i = 0;
+  const tick = () => { TYPING[agent] = text.slice(0, i); lanes(); if (i++ < text.length) setTimeout(tick, 28); else delete TYPING[agent]; };
+  tick();
+}
 setInterval(() => {
-  for (const f of FEATURES) if (f.state !== "done") { f.minutes += 1; f.tokens += f.state === "working" ? 2200 + Math.round(Math.random() * 1800) : 0; f.cost += f.state === "working" ? 0.02 : 0; }
-  const live = FEATURES.filter((f) => f.state === "working" && NEXT_STEPS[f.id] && NEXT_STEPS[f.id].length);
-  let fresh = null;
-  if (live.length && Math.random() < .5) {
-    const f = live[Math.floor(Math.random() * live.length)];
-    f.step = NEXT_STEPS[f.id].shift();
-    f.steps.unshift(f.step);
-    fresh = f.id;
+  NOW += 1;
+  let fresh = false;
+  const live = AGENTS.filter((a) => current(a) && current(a).state === "working" && NEXT[a.id] && NEXT[a.id].length);
+  if (live.length && Math.random() < .55) {
+    const a = live[Math.floor(Math.random() * live.length)];
+    const c = current(a);
+    c.step = NEXT[a.id].shift();
+    FEED.unshift([NOW, a.name, c.step]);
+    fresh = true;
+    render(true);
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) type(a.id, c.step);
+    return;
   }
   render(fresh);
 }, 3000);
 
-// ---- Controls -----------------------------------------------------------------------
 const sel = document.getElementById("proj");
-for (const pr of [...new Set(PEOPLE.map((p) => p.project))]) sel.append(new Option(pr, pr));
-sel.addEventListener("change", () => { PROJ = sel.value; if (!shown().some((f) => f.id === CHOSEN)) CHOSEN = shown()[0].id; render(); });
-document.querySelectorAll("[data-by]").forEach((b) => b.addEventListener("click", () => {
-  BY = b.dataset.by;
-  document.querySelectorAll("[data-by]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-  render();
-}));
+for (const pr of [...new Set(Object.values(PEOPLE).map((p) => p[1]))]) sel.append(new Option(pr, pr));
+sel.addEventListener("change", () => { PROJ = sel.value; if (!shown().some((a) => a.id === CHOSEN)) CHOSEN = shown()[0].id; render(); });
 document.querySelectorAll("[data-theme-set]").forEach((b) => b.addEventListener("click", () => {
   const t = b.dataset.themeSet;
   if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
   document.querySelectorAll("[data-theme-set]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-  render();
 }));
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => render());
 render();
 </script>
 </body>

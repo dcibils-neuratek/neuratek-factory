@@ -141,19 +141,29 @@ INSERT INTO messages (discussion, text, author, at, agent)
   SELECT id, 'First, I think. Two questions before we agree, written above.', 'Marta Gómez', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-40 minutes'), 0 FROM discussions WHERE project = 'demo';
 
 -- What the agents are doing now: one at work, one waiting on the decision.
-INSERT INTO doing (project, author, person, state, card, step, waiting, since, updated) VALUES
+INSERT INTO doing (project, author, person, state, card, step, waiting, model, since, updated) VALUES
   ('demo', 'Claude (Marta)', NULL, 'working', 'demo-scan', 'checking the two forged documents are refused',
-   '', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-3 hours'), strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-4 minutes')),
+   '', 'Claude Opus 5.5', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-3 hours'), strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-4 minutes')),
   ('demo', 'Gemini (Tomás)', NULL, 'waiting', 'demo-kyc', 'partial matches',
-   'a decision: refuse or review a partial match', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2 hours'), strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-25 minutes'));
+   'a decision: refuse or review a partial match', 'Gemini 3 Pro', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2 hours'), strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-25 minutes'));
 
--- Today's changes, as the feed shows them.
+-- Today's changes, as the feed shows them - and every step the agents said,
+-- from which Live draws each one's day.
 INSERT INTO changes (project, at, author, kind, card, data) VALUES
+  ('demo', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-5 hours'), 'Gemini (Tomás)', 'now', NULL, '{"state":"working","step":"Load test the SMS sender at 50 codes a second"}'),
+  ('demo', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-4 hours', '-20 minutes'), 'Gemini (Tomás)', 'now', 'demo-kyc', '{"state":"working","step":"loading the sanctions lists"}'),
+  ('demo', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-4 hours', '-30 minutes'), 'Claude (Marta)', 'now', 'demo-welcome', '{"state":"working","step":"the comparison table in both themes"}'),
+  ('demo', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-3 hours', '-40 minutes'), 'Claude (Marta)', 'now', NULL, '{"state":"idle"}'),
+  ('demo', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-3 hours'), 'Claude (Marta)', 'now', 'demo-scan', '{"state":"working","step":"reading the five test IDs"}'),
+  ('demo', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2 hours', '-50 minutes'), 'Gemini (Tomás)', 'now', 'demo-kyc', '{"state":"working","step":"exact matches stop the opening"}'),
+  ('demo', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2 hours', '-55 minutes'), 'Claude (Marta)', 'now', 'demo-scan', '{"state":"waiting","step":"the selfie threshold","waiting":"Marta: lower the match threshold for glasses?"}'),
+  ('demo', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2 hours'), 'Claude (Marta)', 'now', 'demo-scan', '{"state":"working","step":"a hint to take glasses off before the selfie"}'),
+  ('demo', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 hours'), 'Claude (Marta)', 'now', 'demo-scan', '{"state":"working","step":"the five test applicants pass"}'),
   ('demo', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-3 hours'), 'Claude (Marta)', 'queue.take', 'demo-scan', '{}'),
   ('demo', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-3 hours'), 'Claude (Marta)', 'note', 'demo-scan', '{"text":"Document reading works for the five test IDs."}'),
   ('demo', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-2 hours'), 'Marta Gómez', 'note', 'demo-scan', '{"text":"Ask the applicant to take the glasses off before the selfie."}'),
   ('demo', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-40 minutes'), 'Marta Gómez', 'discussion.message', NULL, '{"discussion":1}'),
   ('demo', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-25 minutes'), 'Gemini (Tomás)', 'decision.new', 'demo-kyc', '{"question":"A partial sanctions match: refuse, or send to a person?"}'),
-  ('demo', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-25 minutes'), 'Gemini (Tomás)', 'now', 'demo-kyc', '{"state":"waiting","step":"partial matches","waiting":"a decision"}'),
+  ('demo', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-25 minutes'), 'Gemini (Tomás)', 'now', 'demo-kyc', '{"state":"waiting","step":"partial matches","waiting":"a decision: refuse or review a partial match"}'),
   ('demo', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-12 minutes'), 'Claude (Marta)', 'note', 'demo-scan', '{"text":"The five pass now. Checking the two forged documents next."}'),
   ('demo', strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-4 minutes'), 'Claude (Marta)', 'now', 'demo-scan', '{"state":"working","step":"checking the two forged documents are refused"}');

@@ -650,6 +650,29 @@ def main():
         s, b = call("GET", S + "/changes")
         check(any(c["kind"] == "agent.connect" for c in b["changes"]), "a connection not in the changes")
 
+        # Live: each agent's day as blocks, read back from what it said; the
+        # model it says it runs on kept until it says another.
+        day = time.strftime("%Y-%m-%dT00:00:00.000Z", time.gmtime(time.time() - 6 * 3600))
+        call("PUT", S + "/now", {"step": "reading the code", "state": "working", "model": "Claude Opus 5.5"}, auth=made)
+        call("PUT", S + "/now", {"step": "an answer", "state": "waiting", "waiting": "Test's answer"}, auth=made)
+        s, b = call("GET", "/api/live?since=" + day)
+        mine_live = [a for a in b.get("agents", []) if a["author"] == "Claude (Test)" and a["project"] == "site"]
+        check(s == 200 and len(mine_live) == 1, "Live did not list the connected agent: %r" % ((s, b),))
+        if mine_live:
+            m = mine_live[0]
+            check(m["model"] == "Claude Opus 5.5" and m["state"] == "waiting" and m["waiting"] == "Test's answer" and m["person_name"] == "Test",
+                  "Live's agent: %r" % m)
+            check([x["state"] for x in m["blocks"]][-2:] == ["working", "waiting"] and m["blocks"][-1]["to"] is None
+                  and m["blocks"][-2]["to"] == m["blocks"][-1]["from"], "Live's blocks: %r" % m["blocks"])
+        check(any(x["step"] == "reading the code" for x in b.get("steps", [])), "Live's steps: %r" % b.get("steps"))
+        s, b = call("GET", "/api/live?since=yesterday")
+        check(s == 400, "Live took a since that is no time: %r" % ((s, b),))
+        s, b = call("GET", "/api/live?since=" + day, auth=made)
+        check(s == 200 and {a["project"] for a in b["agents"]} <= {"site"}, "a key for one project saw Live elsewhere: %r" % b)
+        s, b = call("GET", "/api/live?since=" + day, access=token("nobody-yet@neuratek.test"))
+        check(s == 200 and b["agents"] == [], "someone in no project saw agents in Live: %r" % b)
+        call("PUT", S + "/now", {"state": "idle"}, auth=made)
+
         # A project open to everyone, as the demo is: a newcomer sees it as a
         # viewer and changes nothing; only an admin opens one.
         s, b = call("PATCH", "/api/projects/site", {"everyone": "viewer"}, access=A())

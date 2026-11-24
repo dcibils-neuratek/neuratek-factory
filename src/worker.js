@@ -23,7 +23,7 @@
 // the asker reaches, are not.
 
 const COLUMNS = ["ideas", "agreed", "next", "building", "done", "parked"];
-const LIMITS = { email: 200, title: 200, detail: 4000, quote: 400, area: 40, ref: 60, note: 4000, question: 600, words: 2000, step: 300, waiting: 200, task: 200, idea: 2000, purpose: 1000, summary: 4000, caption: 300, filename: 200, name: 80 };
+const LIMITS = { model: 60, email: 200, title: 200, detail: 4000, quote: 400, area: 40, ref: 60, note: 4000, question: 600, words: 2000, step: 300, waiting: 200, task: 200, idea: 2000, purpose: 1000, summary: 4000, caption: 300, filename: 200, name: 80 };
 
 // What a file may be, and how large: pictures, PDFs, short films, text.
 const FILE_TYPES = /^(image\/(png|jpeg|gif|webp)|application\/pdf|video\/(mp4|webm)|text\/(plain|markdown))$/;
@@ -829,17 +829,19 @@ async function set_now(cx, body) {
 
   const step = text(body.step, "step") || "";
   const waiting = text(body.waiting, "waiting") || "";
+  const model = text(body.model, "model") || null;
   const at = now();
   const before = await cx.env.DB.prepare("SELECT card, since FROM doing WHERE project = ? AND author = ?")
     .bind(cx.project, cx.author).first();
   const since = before && before.card === (body.card || null) && before.since ? before.since : at;
 
-  await cx.env.DB.prepare(`INSERT INTO doing (project, author, person, state, card, step, waiting, since, updated)
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  // The model, once said, is kept until the agent says another.
+  await cx.env.DB.prepare(`INSERT INTO doing (project, author, person, state, card, step, waiting, model, since, updated)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                            ON CONFLICT (project, author) DO UPDATE SET person = excluded.person, state = excluded.state,
-                           card = excluded.card, step = excluded.step, waiting = excluded.waiting, since = excluded.since,
-                           updated = excluded.updated`)
-    .bind(cx.project, cx.author, cx.me.person.id, state, body.card || null, step, waiting, since, at).run();
+                           card = excluded.card, step = excluded.step, waiting = excluded.waiting,
+                           model = COALESCE(excluded.model, doing.model), since = excluded.since, updated = excluded.updated`)
+    .bind(cx.project, cx.author, cx.me.person.id, state, body.card || null, step, waiting, model, since, at).run();
 
   await log(cx, "now", body.card || null, { state, step, waiting });
   return json({ now: (await now_of(cx.env, cx.project)).find((n) => n.author === cx.author) });
@@ -1259,6 +1261,94 @@ async function export_md(cx) {
   return new Response(out.join("\n"), { headers: { "content-type": "text/markdown; charset=utf-8", "cache-control": "no-store" } });
 }
 
+// ---- Live: every agent's day, across every project -----------------------------
+//
+// Each agent's day as blocks: the time between one `PUT /now` and the next,
+// on a card, working or waiting - read back from the changes, where every
+// one is kept. Nothing new is asked of an agent to draw it. `since` is the
+// start of the asker's day, which only their browser knows.
+//
+async function live(env, me, url) {
+  const since = url.searchParams.get("since") || new Date(Date.now() - 12 * 3600000).toISOString();
+
+  if (!/^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(since)) return refused(400, "since is a time, as 2026-11-24T03:00:00.000Z");
+
+  const projects = await reachable(env, me, false);
+  const at = now();
+
+  if (!projects.length) return json({ now: at, since, agents: [], steps: [] });
+
+  const ids = projects.map((p) => p.id);
+  const marks = ids.map(() => "?").join(", ");
+  const DB = env.DB;
+  const doing = (await DB.prepare(`SELECT * FROM doing WHERE project IN (${marks})`).bind(...ids).all()).results;
+  const said = (await DB.prepare(`SELECT project, at, author, card, data FROM changes WHERE kind = 'now' AND at >= ? AND project IN (${marks}) ORDER BY at, id`)
+    .bind(since, ...ids).all()).results;
+  const cards = new Map((await DB.prepare(`SELECT id, project, title, col, ref FROM cards WHERE removed IS NULL AND project IN (${marks})`)
+    .bind(...ids).all()).results.map((c) => [c.id, c]));
+  const open = (await DB.prepare(`SELECT id, project, card, asked_by, question FROM decisions WHERE answer IS NULL AND project IN (${marks})`)
+    .bind(...ids).all()).results;
+  const people = new Map((await DB.prepare("SELECT id, name FROM people").all()).results.map((p) => [p.id, p.name]));
+  const names = new Map(projects.map((p) => [p.id, p.name]));
+  const key = (project, author) => project + "\u0000" + author;
+  const agents = new Map();
+  const agent = (project, author) => {
+    const k = key(project, author);
+    if (!agents.has(k)) agents.set(k, { project, project_name: names.get(project), author, blocks: [] });
+    return agents.get(k);
+  };
+  const steps = [];
+
+  for (const c of said) {
+    let d = {};
+    try { d = JSON.parse(c.data); } catch {}
+    const a = agent(c.project, c.author);
+    const card = cards.get(c.card);
+    const last = a.blocks[a.blocks.length - 1];
+
+    if (last && !last.to) last.to = c.at;
+    if (d.state && d.state !== "idle") {
+      // The same card in the same state goes on being one block.
+      if (last && last.to === c.at && last.card === (c.card || null) && last.state === d.state) {
+        last.to = null; last.step = d.step || last.step; last.waiting = d.waiting || "";
+      } else {
+        a.blocks.push({ card: c.card || null, title: card ? card.title : d.step || "", ref: card ? card.ref : "", col: card ? card.col : null,
+                        state: d.state, from: c.at, to: null, step: d.step || "", waiting: d.waiting || "" });
+      }
+    }
+    if (d.step || d.waiting) {
+      steps.push({ at: c.at, author: c.author, project: c.project, card: c.card || null, title: card ? card.title : "",
+                   state: d.state || "working", step: d.step || "", waiting: d.waiting || "" });
+    }
+  }
+
+  for (const d of doing) {
+    // An agent at work, or one that said something today.
+    if (d.state === "idle" && d.updated < since && !agents.has(key(d.project, d.author))) continue;
+
+    const a = agent(d.project, d.author);
+    const card = cards.get(d.card);
+    const last = a.blocks[a.blocks.length - 1];
+
+    if (last && !last.to && d.state === "idle") last.to = d.updated;
+    // At work since before the day began: a block from the day's start.
+    if (!a.blocks.length && d.state !== "idle") {
+      a.blocks.push({ card: d.card, title: card ? card.title : d.step, ref: card ? card.ref : "", col: card ? card.col : null,
+                      state: d.state, from: since > d.since ? since : d.since, to: null, step: d.step, waiting: d.waiting });
+    }
+    const q = d.card && open.find((x) => x.project === d.project && x.card === d.card && x.asked_by === d.author);
+
+    Object.assign(a, { person: d.person, person_name: people.get(d.person) || "", model: d.model || "", state: d.state, card: d.card,
+                       title: card ? card.title : "", ref: card ? card.ref : "", col: card ? card.col : null, step: d.step,
+                       waiting: d.waiting, since: d.since, updated: d.updated, decision: q ? { id: q.id, question: q.question } : null });
+  }
+
+  const list = [...agents.values()].filter((a) => a.state !== undefined || a.blocks.length);
+
+  list.sort((x, y) => (x.state === "idle") - (y.state === "idle") || (x.project_name || "").localeCompare(y.project_name || "") || x.author.localeCompare(y.author));
+  return json({ now: at, since, agents: list, steps: steps.reverse().slice(0, 60) });
+}
+
 // ---- Connecting a coding agent ----------------------------------------------
 //
 // A person, signed in on the page, asks for a setup code for a project; the
@@ -1303,9 +1393,10 @@ How to work:
   queue, and the card it names moves to Building. Work on nothing else
   unless a person asks.
 - **Say what you are doing, at every step**: \`PUT ${api}/now\` with
-  \`{"card": "<id>", "state": "working", "step": "<a few words>"}\`; while you
-  wait, \`"state": "waiting", "waiting": "<on what>"\`; with nothing left,
-  \`"state": "idle"\`.
+  \`{"card": "<id>", "state": "working", "step": "<a few words>"}\` - and, the
+  first time, \`"model": "<the model you run on>"\`; while you wait,
+  \`"state": "waiting", "waiting": "<on what>"\`; with nothing left,
+  \`"state": "idle"\`. Each step is a line in the project's Live view.
 - **Ask, do not guess**: a note on the card with \`"asks": true\`
   (\`POST ${api}/cards/<id>/notes\`), or a decision with \`question\` and
   \`options\` (\`POST ${api}/decisions\`) - then wait for the answer.
@@ -1449,6 +1540,7 @@ async function api(request, env, url) {
                     projects: key.narrow, roles: Object.fromEntries(key.roles) });
     }
     if (parts[0] === "mine" && parts.length === 1 && m === "GET") return await mine(env, key);
+    if (parts[0] === "live" && parts.length === 1 && m === "GET") return await live(env, key, url);
     if (parts[0] === "mentions" && parts.length === 3 && parts[2] === "done" && m === "POST") return await mention_done(env, key, Number(parts[1]));
     if (parts[0] === "people") {
       if (parts.length === 1 && m === "GET") return await list_people(env, key);

@@ -287,6 +287,87 @@ pre.cmd { margin: 0; font: 12px/1.5 var(--mono); background: var(--sunk); border
   .qitem { grid-template-columns: 22px 24px minmax(0, 1fr); }
   .qitem .acts { grid-column: 1 / -1; justify-content: flex-start; }
 }
+
+/* ---- Live: each agent as a lane across today, and the card for this minute. */
+.live { display: flex; flex-direction: column; gap: 12px; padding: 14px 18px 30px; }
+.live .lhead { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.live .lhead .sub { color: var(--soft); }
+.live .lhead .sp { flex: 1; }
+.live .pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--green); animation: lpulse 2s infinite; }
+@keyframes lpulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--green) 55%, transparent); } 70% { box-shadow: 0 0 0 9px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; color: var(--soft); font-size: 12.5px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 18px; height: 10px; border-radius: 3px; }
+.lanesbox { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.lanes { display: grid; grid-template-columns: 180px minmax(0, 1fr) 360px; }
+.lanes .hrow { display: contents; }
+.lanes .hrow > div { border-bottom: 1px solid var(--line); padding: 8px 12px; color: var(--dim); font-size: 11.5px; }
+.lanes .axis { position: relative; height: 32px; }
+.lanes .axis span { position: absolute; top: 8px; transform: translateX(-50%); font-family: var(--mono); font-size: 11px; color: var(--dim); }
+.lane { display: contents; }
+.lane > div { border-bottom: 1px solid var(--line); }
+.lane:last-child > div { border-bottom: 0; }
+.lane .lwho { padding: 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lane .lwho b { font-weight: 600; display: flex; align-items: center; gap: 7px; }
+.lane .lwho b i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.lane .lwho span { font-size: 12px; color: var(--dim); overflow-wrap: anywhere; }
+.lane .lwho .model { font-family: var(--mono); font-size: 11px; }
+.track { position: relative; min-height: 92px; background: repeating-linear-gradient(to right, transparent 0, transparent calc(var(--hour) - 1px), var(--line) calc(var(--hour) - 1px), var(--line) var(--hour)); }
+.blk { position: absolute; top: 16px; bottom: 16px; border-radius: 7px; padding: 5px 8px; overflow: hidden; font-size: 11.5px; line-height: 1.3; border: 1px solid transparent; display: flex; flex-direction: column; justify-content: center; min-width: 4px; color: var(--ink); text-align: left; font: inherit; font-size: 11.5px; }
+.blk b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.blk span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: .8; }
+.blk.working { background: var(--green-soft); border-color: color-mix(in srgb, var(--green) 45%, transparent); }
+.blk.waiting { background: repeating-linear-gradient(135deg, var(--amber-soft) 0 6px, color-mix(in srgb, var(--amber) 16%, var(--amber-soft)) 6px 12px); border-color: color-mix(in srgb, var(--amber) 50%, transparent); }
+.blk.done { background: var(--sunk); border-color: var(--line2); color: var(--soft); }
+.blk.done::after { content: "✓"; position: absolute; right: 7px; top: 4px; color: var(--green); font-weight: 700; }
+.blk.live { box-shadow: 0 0 0 2px color-mix(in srgb, var(--green) 35%, transparent); }
+.nowline { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--accent); z-index: 2; pointer-events: none; }
+.nowline::before { content: "now"; position: absolute; top: 0; left: 4px; font: 600 10px var(--mono); color: var(--accent); }
+.lcard { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; border-left: 1px solid var(--line); min-width: 0; }
+.lcard .lstate { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+.lcard .lstate i { width: 7px; height: 7px; border-radius: 50%; }
+.lcard .ltitle { font-weight: 600; font-size: 14px; }
+.lcard .lstep { font-family: var(--mono); font-size: 12px; color: var(--soft); }
+.lcard .caret { display: inline-block; width: 7px; height: 13px; background: var(--green); vertical-align: -2px; margin-left: 2px; animation: lblink 1s steps(1) infinite; }
+@keyframes lblink { 50% { opacity: 0; } }
+.lcard .lwait { background: var(--amber-soft); border-radius: 6px; padding: 3px 8px; font-size: 12.5px; }
+.lstages { display: flex; align-items: center; margin-top: 2px; }
+.lstages span { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--dim); white-space: nowrap; }
+.lstages span::before { content: ""; width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--line2); background: var(--panel); }
+.lstages span.past::before { background: var(--green); border-color: var(--green); }
+.lstages span.at { color: var(--ink); font-weight: 600; }
+.lstages span.at::before { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.lstages hr { flex: 1; min-width: 10px; border: 0; border-top: 1.5px solid var(--line2); margin: 0 6px; }
+.lstages hr.past { border-color: var(--green); }
+.lcard .lfoot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+.lcard .lfoot .sp { flex: 1; }
+.lbelow { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 12px; align-items: start; }
+.lfeed, .lside { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+.lfeed h2, .lside h2 { margin: 0; padding: 12px 14px 6px; font-size: 13px; font-weight: 600; }
+.lfeed ol { list-style: none; margin: 0; padding: 0 14px 10px; }
+.lfeed li { display: grid; grid-template-columns: 48px 150px minmax(0, 1fr); gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 12.5px; }
+.lfeed li:first-child { border-top: 0; }
+.lfeed time { font-family: var(--mono); font-size: 11.5px; color: var(--dim); }
+.lfeed .a { font-weight: 600; overflow-wrap: anywhere; }
+.lside .body { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 8px; }
+.lside dl { display: grid; grid-template-columns: 96px 1fr; gap: 3px 10px; margin: 0; font-size: 12.5px; }
+.lside dt { color: var(--dim); }
+.lside dd { margin: 0; }
+.lempty { padding: 24px; color: var(--soft); }
+@media (max-width: 1100px) {
+  .lanes { grid-template-columns: 150px minmax(0, 1fr); }
+  .lcard { grid-column: 1 / -1; border-left: 0; border-top: 1px dashed var(--line); }
+  .lanes .hrow > div:last-child { display: none; }
+  .lbelow { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .live { padding: 12px 16px 24px; }
+  .lanes { grid-template-columns: 1fr; }
+  .lanes .hrow > div:first-child { display: none; }
+  .lfeed li { grid-template-columns: 46px minmax(0, 1fr); }
+  .lfeed li .a { grid-column: 2; }
+}
+@media (prefers-reduced-motion: reduce) { .live .pulse, .lcard .caret { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .side { transition: none; } }
 </style>
 </head>
@@ -354,7 +435,7 @@ const S = {
   view: kept.get("view") || "board", project: kept.get("project") || "", me: null, projects: [], everywhere: null, mine: null,
   people: [], members: [], allNow: [], cards: [], queue: [], nows: [], now: null, discussions: [], decisions: [], waiting: null,
   today: [], area: "", query: "", chosen: null, detail: null, discussion: null, discussionDetail: null, stage: "",
-  feedOpen: false, doneShown: 30, thumbs: {}, lastChange: null, tour: null, menu: false,
+  live: null, liveProject: "", liveChosen: null, liveTyped: {}, feedOpen: false, doneShown: 30, thumbs: {}, lastChange: null, tour: null, menu: false,
 };
 
 function hue(text) {
@@ -407,6 +488,137 @@ function when(iso) {
   return d.toLocaleDateString([], { day: "numeric", month: "short" }) + ", " + hm;
 }
 
+// ---- Live ------------------------------------------------------------------------------
+//
+// Every agent at work across the projects someone reaches, as `docs/live.html`
+// draws it: a lane each across today - a block per card, working or waiting
+// - ending in a card for this minute, its step typed in as it arrives. Asked
+// for every five seconds while it is shown.
+//
+const LIVE_STAGES = [["next", "Next"], ["building", "Building"], ["done", "Done"]];
+
+async function loadLive() {
+  const midnight = new Date(); midnight.setHours(0, 0, 0, 0);
+  const before = S.live;
+  S.live = await api("/api/live?since=" + encodeURIComponent(midnight.toISOString()));
+  // A step that changed is typed in, as the drawing shows it.
+  if (before) for (const a of S.live.agents) {
+    const was = before.agents.find((b) => b.project === a.project && b.author === a.author);
+    if (was && a.state === "working" && a.step && a.step !== was.step) typeStep(a);
+  }
+}
+
+function typeStep(a) {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const k = a.project + "/" + a.author;
+  let i = 0;
+  const tick = () => {
+    S.liveTyped[k] = a.step.slice(0, i);
+    const n = document.querySelector('.lstep[data-k="' + CSS.escape(k) + '"]');
+    if (n) n.firstChild.textContent = S.liveTyped[k];
+    if (i++ < a.step.length) setTimeout(tick, 28); else delete S.liveTyped[k];
+  };
+  tick();
+}
+
+setInterval(() => {
+  if (S.me && S.view === "live" && !document.hidden && !document.querySelector(".sheet")) loadLive().then(renderMain).catch(() => {});
+}, 5000);
+
+function hhmm(iso) { return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }); }
+
+function liveView() {
+  const L = S.live;
+  if (!L) return el("div", { class: "lempty", text: "Asking what every agent is doing…" });
+  const shown = L.agents.filter((a) => !S.liveProject || a.project === S.liveProject);
+  const now = new Date(L.now).getTime();
+  const at = (iso) => iso ? new Date(iso).getTime() : now;
+  const firsts = shown.flatMap((a) => a.blocks.map((b) => at(b.from)));
+  const day = new Date(now); day.setHours(8, 0, 0, 0);
+  const start = Math.min(day.getTime(), ...firsts.map((t) => { const d = new Date(t); d.setMinutes(0, 0, 0); return d.getTime(); }));
+  const span = now + 30 * 60000 - start;
+  const pct = (t) => (100 * (t - start) / span).toFixed(3) + "%";
+  const working = shown.filter((a) => a.state === "working").length;
+  const waiting = shown.filter((a) => a.state === "waiting").length;
+  const projects = [...new Map(L.agents.map((a) => [a.project, a.project_name])).entries()];
+
+  const hours = [];
+  for (let t = start; t <= now + 30 * 60000; t += 3600000) hours.push(el("span", { style: "left:" + pct(t), text: hhmm(new Date(t).toISOString()) }));
+
+  const lane = (a) => {
+    const k = a.project + "/" + a.author;
+    const atWork = a.state === "working" || a.state === "waiting";
+    const colour = a.state === "working" ? "var(--green)" : a.state === "waiting" ? "var(--amber)" : "var(--line2)";
+    const blocks = a.blocks.map((b, i) => {
+      const live = !b.to && i === a.blocks.length - 1 && atWork;
+      const cls = b.col === "done" && !live ? "done" : b.state === "waiting" ? "waiting" : "working";
+      const mins = Math.round((at(b.to) - at(b.from)) / 60000);
+      const words = cls === "waiting" ? "waiting · " + (b.waiting || b.step) : (b.ref ? b.ref + " · " : "") + minutesOf(mins);
+      return el("button", { class: "blk " + cls + (live && cls === "working" ? " live" : ""), type: "button",
+        style: "left:" + pct(at(b.from)) + ";width:calc(" + pct(at(b.to)) + " - " + pct(at(b.from)) + " - 2px)",
+        title: (b.title || b.step) + " · " + hhmm(b.from) + "-" + (b.to ? hhmm(b.to) : "now"),
+        onclick: () => { S.liveChosen = k; renderMain(); } },
+        mins >= 25 ? [el("b", { text: b.title || b.step || "a task" }), el("span", { text: words })] : null);
+    });
+    const stageAt = LIVE_STAGES.findIndex(([c]) => c === a.col);
+    const stages = LIVE_STAGES.map(([, n], i) => [i ? el("hr", { class: stageAt >= i ? "past" : "" }) : null,
+      el("span", { class: i < stageAt ? "past" : i === stageAt ? "at" : "", text: n })]);
+    const typed = S.liveTyped[k];
+    const card = atWork ? [
+      el("span", { class: "lstate", style: "color:" + colour }, el("i", { style: "background:" + colour }), a.state === "working" ? "Working" : "Waiting"),
+      el("span", { class: "ltitle" }, a.title || a.step || "A task", a.ref ? el("span", { class: "dim mono", style: "font-weight:400;font-size:11px", text: " " + a.ref }) : null),
+      a.state === "working" ? el("span", { class: "lstep", "data-k": k }, document.createTextNode(typed !== undefined ? typed : a.step || ""), el("span", { class: "caret" }))
+        : el("span", { class: "lwait" }, el("span", { class: "dim", text: "Waiting on: " }), a.waiting || a.step || "someone"),
+      stageAt >= 0 ? el("div", { class: "lstages", "aria-label": "Where the card is" }, stages.flat()) : null,
+      el("div", { class: "lfoot" }, el("span", { text: "since " + hhmm(a.since) + " · " + minutes(a.since) }), el("span", { class: "sp" }),
+        a.decision ? el("button", { class: "btn go", type: "button", style: "min-height:28px", onclick: () => chooseProject(a.project, "decisions") }, "Answer") : null,
+        a.card ? el("button", { class: "btn", type: "button", style: "min-height:28px", onclick: async () => { await chooseProject(a.project, "board"); openCard(a.card); } }, "Open") : null),
+    ] : el("span", { class: "dim", text: "Idle since " + hhmm(a.updated) + "." });
+    return el("div", { class: "lane", "data-author": a.author, "data-project": a.project },
+      el("div", { class: "lwho" }, el("b", {}, el("i", { style: "background:" + colour }), a.author),
+        a.model ? el("span", { class: "model", text: a.model }) : null,
+        el("span", { text: (a.person_name ? "for " + a.person_name + " · " : "") + a.project_name })),
+      el("div", { class: "track", style: "--hour:" + (100 * 3600000 / span).toFixed(3) + "%" }, blocks, el("div", { class: "nowline", style: "left:" + pct(now) })),
+      el("div", { class: "lcard" }, card));
+  };
+
+  const chosen = shown.find((a) => a.project + "/" + a.author === S.liveChosen) || shown[0];
+  const sum = (a, f) => Math.round(a.blocks.filter(f).reduce((s, b) => s + at(b.to) - at(b.from), 0) / 60000);
+  const names = new Set(shown.map((a) => a.project + "/" + a.author));
+  const steps = L.steps.filter((x) => names.has(x.project + "/" + x.author)).slice(0, 14);
+
+  return el("div", { class: "live" },
+    el("div", { class: "lhead" }, el("span", { class: "pulse", "aria-hidden": "true" }),
+      el("span", { class: "sub", text: shown.length ? working + " working · " + waiting + " waiting on someone · " + ((n) => n + (n === 1 ? " project" : " projects"))(new Set(shown.map((a) => a.project)).size) : "" }),
+      el("span", { class: "sp" }),
+      el("div", { class: "legend", "aria-label": "What the colours mean" },
+        el("span", {}, el("i", { style: "background:var(--green-soft);border:1px solid var(--green)" }), "Working"),
+        el("span", {}, el("i", { style: "background:var(--amber-soft);border:1px solid var(--amber)" }), "Waiting"),
+        el("span", {}, el("i", { style: "background:var(--sunk);border:1px solid var(--line2)" }), "Done")),
+      projects.length > 1 ? el("select", { class: "field", style: "width:auto", "aria-label": "Project", onchange: (e) => { S.liveProject = e.target.value; renderMain(); } },
+        el("option", { value: "", text: "Every project" }), projects.map(([id, name]) => el("option", { value: id, selected: S.liveProject === id, text: name }))) : null),
+    shown.length ? el("section", { class: "lanesbox", "aria-label": "Every agent's day, and what it is doing now" },
+      el("div", { class: "lanes" },
+        el("div", { class: "hrow" }, el("div", { text: "Agent" }), el("div", { class: "axis" }, hours), el("div", { text: "Now" })),
+        shown.map(lane)))
+      : el("div", { class: "lanesbox lempty" }, "No agent has worked today in your projects. Connect one from a project with Connect Claude Code; it appears here as soon as it says what it is doing."),
+    shown.length ? el("div", { class: "lbelow" },
+      el("section", { class: "lfeed", "aria-label": "Every step, as it is said" }, el("h2", { text: "Every step, as it is said" }),
+        el("ol", {}, steps.length ? steps.map((x) => el("li", {}, el("time", { text: hhmm(x.at) }), el("span", { class: "a", text: x.author }),
+          el("span", {}, x.title ? el("b", { style: "font-weight:500", text: x.title + " · " }) : null, x.waiting ? "waiting on " + x.waiting : x.step)))
+          : el("li", {}, el("span"), el("span", { class: "dim", text: "Nothing said yet today." })))),
+      chosen ? el("aside", { class: "lside", "aria-label": "The agent chosen" }, el("h2", { text: chosen.author }),
+        el("div", { class: "body" },
+          el("dl", {},
+            el("dt", { text: "For" }), el("dd", { text: (chosen.person_name ? chosen.person_name + " · " : "") + chosen.project_name }),
+            chosen.model ? [el("dt", { text: "Model" }), el("dd", { text: chosen.model })] : null,
+            el("dt", { text: "Worked today" }), el("dd", { text: minutesOf(sum(chosen, (b) => b.state === "working")) }),
+            el("dt", { text: "Waited today" }), el("dd", { text: minutesOf(sum(chosen, (b) => b.state === "waiting")) }),
+            el("dt", { text: "Cards today" }), el("dd", { text: String(new Set(chosen.blocks.map((b) => b.card).filter(Boolean)).size) })))) : null) : null);
+}
+
+function minutesOf(m) { return m < 60 ? m + " min" : Math.floor(m / 60) + " h " + (m % 60) + " min"; }
+
 function minutes(fromIso) {
   if (!fromIso) return "";
   const m = Math.max(0, Math.round((Date.now() - new Date(fromIso)) / 60000));
@@ -450,6 +662,7 @@ async function load() {
     api("/api/projects"), api("/api/waiting"), api("/api/mine"), api("/api/people"), api("/api/now"),
   ]);
   S.projects = projects.projects; S.everywhere = everywhere; S.mine = mine; S.people = people.people; S.allNow = allNow.now;
+  if (S.view === "live") await loadLive();
   if (!S.projects.some((p) => p.id === S.project)) S.project = S.projects.length ? S.projects[0].id : "";
   if (!S.project) {
     if (PROJECT_VIEWS.includes(S.view)) S.view = "projects";
@@ -516,6 +729,7 @@ function gate() {
 function go(view) {
   S.view = view; S.menu = false;
   kept.set("view", view);
+  if (view === "live") return attempt("Not shown", async () => { await loadLive(); render(); });
   render();
 }
 
@@ -554,6 +768,7 @@ function sidebar() {
   return el("aside", { class: "side", "aria-label": "Views and projects" },
     el("div", { class: "brand" }, el("span", { class: "mk", text: "F" }), "Neuratek Factory"),
     nav("mine", "◎", "My work", owedN, { hot: owedN > 0 }),
+    nav("live", "◉", "Live", S.allNow.filter((n) => n.state !== "idle").length),
     nav("projects", "≡", "All projects", S.projects.length),
     S.me.admin ? nav("people", "☺", "People", S.people.filter((p) => !p.removed).length) : null,
     nav("guide", "?", "How to use Factory"),
@@ -590,7 +805,7 @@ function flipTheme() {
 function topbar() {
   const here = projectOf(S.project);
   const titles = { board: "Board", queue: "Queue", discussions: "Discussions", decisions: "Decisions", members: "Members",
-                   mine: "My work", projects: "All projects", people: "People", guide: "How to use Factory", api: "The API" };
+                   mine: "My work", live: "Live", projects: "All projects", people: "People", guide: "How to use Factory", api: "The API" };
   const inProject = PROJECT_VIEWS.includes(S.view) && here;
   const search = S.view === "board" && here ? el("label", { class: "search" }, el("span", { "aria-hidden": "true", text: "⌕" }),
     el("input", { type: "search", value: S.query, placeholder: "Search cards", "aria-label": "Search cards", oninput: (e) => { S.query = e.target.value; renderMain(); } }),
@@ -1440,7 +1655,7 @@ function tour() {
 // ---- The API, for another device or a program -----------------------------------------
 // The same table as README.md, which test_board.py holds it to.
 
-const ROUTES = [["GET","/api/me","who asks: the key's name, its person, whether an admin, its projects (`null`: all) and the role in each"],["GET","/api/mine","My work: the cards I own, and what waits for me, in every project"],["POST","/api/mentions/:id/done","a mention seen, out of My work"],["GET","/api/people","everyone an admin can see; anyone else, the people sharing a project with them"],["POST","/api/people","`{ email, name, admin }`: someone added before they sign in - admins only"],["PATCH","/api/people/:id","`name`, `admin`, `removed` - admins only"],["GET","/api/projects?archived=true","the projects, each with its columns counted, its queue's length and what Claude is doing there"],["POST","/api/projects","`{ name, id, detail }`: a new project; `id` is made from the name when not said"],["PATCH","/api/projects/:id","`name`, `detail`, `archived`, `everyone` (`viewer`, `member` or `null`: what every signed-in person is in it, as in the demo)"],["GET","/api/now","what Claude is doing, in every project the key reaches"],["GET","/api/waiting","what waits for a reply, in every project, each item naming its project"],["GET","/api/changes?since=","everything changed since a time, in every project"],["GET","/api/p/:project/members","who is in the project, and as what"],["POST","/api/p/:project/connect","a one-time setup code for connecting Claude Code, for ten minutes - a person signed in who edits the project"],["POST","/api/connect","`{ code, name }`, with no key: the setup code traded once for an agent key reaching only its project, and the `CLAUDE.md` section"],["PUT","/api/p/:project/members/:person","`{ role }`: member or viewer - admins only"],["DELETE","/api/p/:project/members/:person","out of the project - admins only"],["GET","/api/p/:project/cards?column=&area=&q=","the cards, each column in order"],["POST","/api/p/:project/cards","a new card: `title`, `column` (Ideas when not said), `area`, `ref`, `detail`, `quote`, `before`"],["GET","/api/p/:project/cards/:id","one card, its notes, its history, its decisions"],["PATCH","/api/p/:project/cards/:id","`title`, `area`, `ref`, `detail`, `quote`, `in_roadmap`"],["POST","/api/p/:project/cards/:id/move","`{ column, before }`: into a column, before a card or last"],["POST","/api/p/:project/cards/:id/notes","`{ text, asks }`: a card's talk; `asks` when Claude awaits a reply"],["DELETE","/api/p/:project/cards/:id","removed, kept to bring back"],["GET","/api/p/:project/decisions?open=true","the questions, open or all"],["POST","/api/p/:project/decisions","`{ card, question, options }`"],["PATCH","/api/p/:project/decisions/:id","`{ answer, words }`: answered, and a note on its card"],["GET","/api/p/:project/now","what Claude is doing here: its card, its step, what it waits on, since when"],["PUT","/api/p/:project/now","`{ card, step, state, waiting }`: said by Claude at each step; `state` is working, waiting or idle"],["GET","/api/p/:project/queue","Claude's queue in order: cards and tasks, each with its place"],["POST","/api/p/:project/queue","`{ card }` or `{ title }` for a task; last, `{ before }` or `{ top: true }`"],["POST","/api/p/:project/queue/:id/move","`{ before }`, `{ top: true }`, or last"],["DELETE","/api/p/:project/queue/:id","out of the queue; a card waiting in Next goes back to Agreed"],["POST","/api/p/:project/queue/take","Claude takes the top: it becomes now, its card Building"],["GET","/api/p/:project/discussions?stage=","open, shaping, ready, became, parked"],["POST","/api/p/:project/discussions","`{ title, idea, for }` - the idea is its first message"],["GET","/api/p/:project/discussions/:id","with its summary, options, open questions, conversation and cards"],["PATCH","/api/p/:project/discussions/:id","`stage`, `summary`, `options`, `questions`, `title`, `idea`, `for`"],["POST","/api/p/:project/discussions/:id/messages","`{ text, asks }`"],["POST","/api/p/:project/discussions/:id/cards","a card made from it, linked both ways; it has become cards"],["GET","/api/p/:project/waiting","what waits for a reply here, from Claude and from a person"],["POST","/api/p/:project/cards/:id/files","a file onto a card: the bytes as the body, `Content-Type`, `?name=&caption=`"],["POST","/api/p/:project/discussions/:id/files","a file onto a discussion, the same way"],["GET","/api/files/:id","the file, if its project is one the key reaches; `DELETE` removes it"],["GET","/api/p/:project/changes?since=","everything changed here since a time"],["GET","/api/p/:project/export.md","the project's board as Markdown"]];
+const ROUTES = [["GET","/api/me","who asks: the key's name, its person, whether an admin, its projects (`null`: all) and the role in each"],["GET","/api/mine","My work: the cards I own, and what waits for me, in every project"],["GET","/api/live?since=","every agent in the projects reached, each with its day as blocks (a card, working or waiting, from and to) read back from what it said since `since`, what it is on now, its model, and an open question it asked; and the steps said, newest first"],["POST","/api/mentions/:id/done","a mention seen, out of My work"],["GET","/api/people","everyone an admin can see; anyone else, the people sharing a project with them"],["POST","/api/people","`{ email, name, admin }`: someone added before they sign in - admins only"],["PATCH","/api/people/:id","`name`, `admin`, `removed` - admins only"],["GET","/api/projects?archived=true","the projects, each with its columns counted, its queue's length and what Claude is doing there"],["POST","/api/projects","`{ name, id, detail }`: a new project; `id` is made from the name when not said"],["PATCH","/api/projects/:id","`name`, `detail`, `archived`, `everyone` (`viewer`, `member` or `null`: what every signed-in person is in it, as in the demo)"],["GET","/api/now","what Claude is doing, in every project the key reaches"],["GET","/api/waiting","what waits for a reply, in every project, each item naming its project"],["GET","/api/changes?since=","everything changed since a time, in every project"],["GET","/api/p/:project/members","who is in the project, and as what"],["POST","/api/p/:project/connect","a one-time setup code for connecting Claude Code, for ten minutes - a person signed in who edits the project"],["POST","/api/connect","`{ code, name }`, with no key: the setup code traded once for an agent key reaching only its project, and the `CLAUDE.md` section"],["PUT","/api/p/:project/members/:person","`{ role }`: member or viewer - admins only"],["DELETE","/api/p/:project/members/:person","out of the project - admins only"],["GET","/api/p/:project/cards?column=&area=&q=","the cards, each column in order"],["POST","/api/p/:project/cards","a new card: `title`, `column` (Ideas when not said), `area`, `ref`, `detail`, `quote`, `before`"],["GET","/api/p/:project/cards/:id","one card, its notes, its history, its decisions"],["PATCH","/api/p/:project/cards/:id","`title`, `area`, `ref`, `detail`, `quote`, `in_roadmap`"],["POST","/api/p/:project/cards/:id/move","`{ column, before }`: into a column, before a card or last"],["POST","/api/p/:project/cards/:id/notes","`{ text, asks }`: a card's talk; `asks` when Claude awaits a reply"],["DELETE","/api/p/:project/cards/:id","removed, kept to bring back"],["GET","/api/p/:project/decisions?open=true","the questions, open or all"],["POST","/api/p/:project/decisions","`{ card, question, options }`"],["PATCH","/api/p/:project/decisions/:id","`{ answer, words }`: answered, and a note on its card"],["GET","/api/p/:project/now","what Claude is doing here: its card, its step, what it waits on, since when"],["PUT","/api/p/:project/now","`{ card, step, state, waiting, model }`: said by Claude at each step; `state` is working, waiting or idle"],["GET","/api/p/:project/queue","Claude's queue in order: cards and tasks, each with its place"],["POST","/api/p/:project/queue","`{ card }` or `{ title }` for a task; last, `{ before }` or `{ top: true }`"],["POST","/api/p/:project/queue/:id/move","`{ before }`, `{ top: true }`, or last"],["DELETE","/api/p/:project/queue/:id","out of the queue; a card waiting in Next goes back to Agreed"],["POST","/api/p/:project/queue/take","Claude takes the top: it becomes now, its card Building"],["GET","/api/p/:project/discussions?stage=","open, shaping, ready, became, parked"],["POST","/api/p/:project/discussions","`{ title, idea, for }` - the idea is its first message"],["GET","/api/p/:project/discussions/:id","with its summary, options, open questions, conversation and cards"],["PATCH","/api/p/:project/discussions/:id","`stage`, `summary`, `options`, `questions`, `title`, `idea`, `for`"],["POST","/api/p/:project/discussions/:id/messages","`{ text, asks }`"],["POST","/api/p/:project/discussions/:id/cards","a card made from it, linked both ways; it has become cards"],["GET","/api/p/:project/waiting","what waits for a reply here, from Claude and from a person"],["POST","/api/p/:project/cards/:id/files","a file onto a card: the bytes as the body, `Content-Type`, `?name=&caption=`"],["POST","/api/p/:project/discussions/:id/files","a file onto a discussion, the same way"],["GET","/api/files/:id","the file, if its project is one the key reaches; `DELETE` removes it"],["GET","/api/p/:project/changes?since=","everything changed here since a time"],["GET","/api/p/:project/export.md","the project's board as Markdown"]];
 
 function apiPage() {
   return el("div", { class: "page" },
@@ -1464,7 +1679,7 @@ function renderMain() {
   const inProject = PROJECT_VIEWS.includes(S.view) && S.project;
   const view = !inProject && PROJECT_VIEWS.includes(S.view) ? overview()
     : S.view === "board" ? board() : S.view === "queue" ? [agentsBar(), queue()] : S.view === "discussions" ? discussions()
-    : S.view === "decisions" ? decisions() : S.view === "members" ? members() : S.view === "mine" ? mine()
+    : S.view === "decisions" ? decisions() : S.view === "members" ? members() : S.view === "mine" ? mine() : S.view === "live" ? liveView()
     : S.view === "people" && S.me.admin ? people() : S.view === "guide" ? guide() : S.view === "api" ? apiPage() : overview();
   main.replaceChildren(...[view].flat(Infinity).filter(Boolean));
   const again = document.querySelector(".columns");

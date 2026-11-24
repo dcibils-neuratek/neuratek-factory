@@ -250,6 +250,17 @@ try {
   await js(`document.querySelector('.proj[data-project="kosmos"] .open').click(); true`);
   await until(`[...document.querySelectorAll(".cardbox .title")].some((t) => t.textContent === "Page test: an idea")`, "a project opened from All projects did not show its board");
 
+  // Live: Claude's lane across today, its card for this minute, and a new
+  // step typed in without the page being opened again.
+  await js(`document.querySelector('.side .nav[data-view="live"]').click(); true`);
+  await until(`!!document.querySelector('.lane[data-author="Claude"] .blk')`, "Live did not draw Claude's lane with a block");
+  check(await js(`document.querySelector('.lane[data-author="Claude"] .ltitle')?.textContent.includes("Page test: in hand")`),
+    "Live's card did not name the card in hand");
+  await api("PUT", "/api/now", { state: "working", card: hand, step: "a step said while Live is open", model: "Claude Opus 5.5" }, CLAUDE);
+  await until(`document.querySelector('.lane[data-author="Claude"] .lstep')?.textContent.includes("a step said while Live is open")`,
+    "Live did not show a new step by itself", 12000);
+  check(await js(`document.querySelector('.lane[data-author="Claude"] .model')?.textContent === "Claude Opus 5.5"`), "Live did not show the agent's model");
+
   check(!thrown.length, "the page threw: " + JSON.stringify(thrown));
 } catch (e) {
   check(false, "the page's test stopped: " + e.message);

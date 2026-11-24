@@ -164,6 +164,7 @@ CREATE TABLE IF NOT EXISTS doing (
   card     TEXT,
   step     TEXT NOT NULL DEFAULT '',
   waiting  TEXT NOT NULL DEFAULT '',
+  model    TEXT,                           -- what the agent runs on, as it says: "Claude Opus 5.5"
   since    TEXT NOT NULL,                  -- when this card was started
   updated  TEXT NOT NULL,                  -- when it was last said
   PRIMARY KEY (project, author)

@@ -66,6 +66,10 @@ try {
     if (view === "discussions") { await js(`(document.querySelector(".ditem") || {}).click?.(); true`); await sleep(700); }
     await shoot(view);
   }
+  await js(`document.querySelector('.side .nav[data-view="live"]').click(); true`);
+  await until(`document.querySelectorAll(".lane .blk").length >= 4`);
+  await sleep(600);
+  await shoot("live");
   console.log("screenshots in " + OUT);
 } finally {
   ws.close();

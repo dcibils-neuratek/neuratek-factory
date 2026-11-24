@@ -36,8 +36,17 @@ a person's decision about sanctions matches; the queue says what comes next.*
   what each gains and costs, the questions still open, until it becomes cards.
 - **Decisions** - a question an agent cannot answer itself, asked of a
   person and answered in their words, kept on the card.
+- **Live** - every agent at work across your projects, one lane each across
+  today: a block per card, working or waiting on someone, ending in what it
+  is doing this minute - its step typed in as it arrives, where the card
+  stands, and a button to answer it when it waits on you.
 - **My work** - across every project, what waits for you: questions asked of
   you, mentions, the cards you own, and what your agents need.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/live-dark.png">
+  <img alt="Live: each agent as a lane across today, working blocks and waiting blocks, ending in a card with its current step" src="docs/screenshots/live-light.png">
+</picture>
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/card-dark.png">
@@ -136,6 +145,7 @@ short name (`kosmos`, `site`).
 |---|---|---|
 | GET | `/api/me` | who asks: the key's name, its person, whether an admin, its projects (`null`: all) and the role in each |
 | GET | `/api/mine` | My work: the cards I own, and what waits for me, in every project |
+| GET | `/api/live?since=` | every agent in the projects reached, each with its day as blocks (a card, working or waiting, from and to) read back from what it said since `since`, what it is on now, its model, and an open question it asked; and the steps said, newest first |
 | POST | `/api/mentions/:id/done` | a mention seen, out of My work |
 | GET | `/api/people` | everyone an admin can see; anyone else, the people sharing a project with them |
 | POST | `/api/people` | `{ email, name, admin }`: someone added before they sign in - admins only |
@@ -162,7 +172,7 @@ short name (`kosmos`, `site`).
 | POST | `/api/p/:project/decisions` | `{ card, question, options }` |
 | PATCH | `/api/p/:project/decisions/:id` | `{ answer, words }`: answered, and a note on its card |
 | GET | `/api/p/:project/now` | what Claude is doing here: its card, its step, what it waits on, since when |
-| PUT | `/api/p/:project/now` | `{ card, step, state, waiting }`: said by Claude at each step; `state` is working, waiting or idle |
+| PUT | `/api/p/:project/now` | `{ card, step, state, waiting, model }`: said by Claude at each step; `state` is working, waiting or idle |
 | GET | `/api/p/:project/queue` | Claude's queue in order: cards and tasks, each with its place |
 | POST | `/api/p/:project/queue` | `{ card }` or `{ title }` for a task; last, `{ before }` or `{ top: true }` |
 | POST | `/api/p/:project/queue/:id/move` | `{ before }`, `{ top: true }`, or last |

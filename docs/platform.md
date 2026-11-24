@@ -72,12 +72,13 @@ November 2026; the rest is to build.
 - Each person's agents have their own keys, so the board says whose agent
   did what. *Built.*
 - Several agents in one project, each with its own line in the now-strip. *Built.*
-- **Live** - one view of every agent at work across every project, drawn
-  as a live flow (Diego, 24 November, after a "token flow" Sankey): who the
-  work is for, the agents and their engines, the features they are on with
-  each one's step, and where each stands - working, waiting on a person,
-  done today. Ribbons weighted by time now, and by tokens and cost once
-  agents report them. Drawn first, as `docs/live.html`. *To build.*
+- **Live** - every agent at work across every project, as lanes across
+  today: a block per card, working or waiting, ending in a card for this
+  minute with its step typed in as it arrives (Diego, 24 November). Two
+  were drawn - a flow of people, agents, features and states, after a
+  "token flow" Sankey, and lanes - and Diego chose the lanes; the flow was
+  not kept. Drawn as `docs/live.html`. *Built*, from what agents already
+  say through `PUT /now`, which takes the agent's `model` too.
 - **Any engine** - Claude, Gemini, OpenAI's Codex, Cursor, Aider, or a
   local model: a key records its engine and model, and the board shows them.
 - **Factory's MCP server**: one connection that gives any MCP-capable agent
