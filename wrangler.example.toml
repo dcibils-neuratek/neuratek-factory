@@ -1,0 +1,23 @@
+#  Neuratek Factory. Copyright (c) 2026 Diego Cibils. MIT; see LICENSE.
+#  Neuratek Factory on Cloudflare: one Worker for the API and the page, one
+#  D1 database for every project. Copy this to wrangler.toml, which git
+#  ignores, and fill in your own. The Cloudflare account is not named here:
+#  wrangler takes it from CLOUDFLARE_ACCOUNT_ID (`README.md`). The database's
+#  id is filled in by `wrangler d1 create neuratek-factory`.
+
+name = "neuratek-factory"
+main = "src/worker.js"
+compatibility_date = "2026-04-01"
+
+# Its address: a subdomain of Neuratek's, behind Google sign-in (Cloudflare
+# Access), set to your own.
+routes = [{ pattern = "factory.example.com", custom_domain = true }]
+
+[assets]
+directory = "public"
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "neuratek-factory"
+database_id = "YOUR-DATABASE-ID"

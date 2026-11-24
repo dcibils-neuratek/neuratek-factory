@@ -1,0 +1,1450 @@
+<!-- Neuratek Factory. Copyright (c) 2026 Diego Cibils. MIT; see LICENSE. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Neuratek Factory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Neuratek Factory's page, as drawn in `docs/factory.html` and agreed 24
+   November 2026: a dense work tool in light and dark. A sidebar with the
+   person's views and their projects; a project's agents at work across the
+   top; the board with the card opened in a pane beside it. One file, no
+   build step, over the API in `README.md`. */
+:root {
+  --ground: #f4f5f7; --panel: #ffffff; --sunk: #eceef2; --line: #dfe2e8; --line2: #cfd4dd;
+  --ink: #161a22; --soft: #3d4452; --dim: #6b7383; --accent: #3550d6; --accent-ink: #ffffff; --accent-soft: #e6eafb;
+  --amber: #b7660a; --amber-soft: #fdf0dc; --green: #1f8a4c; --green-soft: #e1f4e8; --red: #c23a3a; --red-soft: #fbe5e5;
+  --violet: #6c4fd1; --violet-soft: #eee9fb;
+  --c-ideas: #c9861b; --c-agreed: #7a5cdb; --c-next: #0f8a80; --c-building: #3550d6; --c-done: #1f8a4c; --c-parked: #b04fa0;
+  --shadow: 0 1px 2px rgba(20, 26, 40, .06), 0 8px 24px rgba(20, 26, 40, .10);
+  --scrim: rgba(10, 14, 22, .35);
+  --body: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0e1116; --panel: #151a21; --sunk: #1b2129; --line: #252c36; --line2: #323b48;
+    --ink: #e7ebf1; --soft: #c0c7d2; --dim: #8b94a3; --accent: #7d93ff; --accent-ink: #0b1030; --accent-soft: #1c2447;
+    --amber: #f0b14e; --amber-soft: #2d2412; --green: #5fcf8c; --green-soft: #13281c; --red: #f07b7b; --red-soft: #2e1818;
+    --violet: #a993ff; --violet-soft: #231c3d;
+    --c-ideas: #f0b14e; --c-agreed: #a993ff; --c-next: #4fd0c3; --c-building: #7d93ff; --c-done: #5fcf8c; --c-parked: #e08fd2;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35); --scrim: rgba(0, 0, 0, .55);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0e1116; --panel: #151a21; --sunk: #1b2129; --line: #252c36; --line2: #323b48;
+  --ink: #e7ebf1; --soft: #c0c7d2; --dim: #8b94a3; --accent: #7d93ff; --accent-ink: #0b1030; --accent-soft: #1c2447;
+  --amber: #f0b14e; --amber-soft: #2d2412; --green: #5fcf8c; --green-soft: #13281c; --red: #f07b7b; --red-soft: #2e1818;
+  --violet: #a993ff; --violet-soft: #231c3d;
+  --c-ideas: #f0b14e; --c-agreed: #a993ff; --c-next: #4fd0c3; --c-building: #7d93ff; --c-done: #5fcf8c; --c-parked: #e08fd2;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35); --scrim: rgba(0, 0, 0, .55);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--ground); color: var(--ink); font: 13.5px/1.45 var(--body); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.mono { font-family: var(--mono); }
+.dim { color: var(--dim); }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.btn { border: 1px solid var(--line2); background: var(--panel); border-radius: 7px; padding: 5px 11px; min-height: 30px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.btn:hover { border-color: var(--dim); }
+.btn.go { background: var(--accent); border-color: transparent; color: var(--accent-ink); font-weight: 500; }
+.btn.quiet { border-color: transparent; background: transparent; color: var(--dim); }
+.btn.done { background: var(--green-soft); border-color: transparent; color: var(--green); font-weight: 500; }
+.btn:disabled { opacity: .45; cursor: default; }
+.field { min-height: 32px; border-radius: 7px; border: 1px solid var(--line2); background: var(--panel); padding: 5px 9px; min-width: 0; }
+textarea.field { resize: vertical; width: 100%; line-height: 1.45; }
+.tag { font-size: 11px; padding: 0 6px; border-radius: 4px; background: var(--sunk); color: var(--soft); white-space: nowrap; line-height: 18px; }
+.tag.you { background: var(--amber-soft); color: var(--amber); font-weight: 500; }
+.tag.here { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.tag.ok { background: var(--green-soft); color: var(--green); }
+.av { width: 24px; height: 24px; border-radius: 50%; display: inline-grid; place-items: center; font: 600 10px var(--body); color: #fff; flex: none; }
+.av.s { width: 20px; height: 20px; font-size: 9px; }
+.av.agent { background: var(--soft) !important; color: var(--panel); }
+.avs { display: inline-flex; }
+.avs .av { border: 2px solid var(--panel); margin-left: -6px; }
+.avs .av:first-child { margin-left: 0; }
+.pj { width: 18px; height: 18px; border-radius: 5px; display: inline-grid; place-items: center; font: 600 9.5px var(--mono); color: #fff; flex: none; }
+.empty { color: var(--dim); padding: 18px; border: 1px dashed var(--line2); border-radius: 10px; margin: 0; }
+.label { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--dim); font-weight: 500; }
+
+/* the frame */
+.app { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100dvh; }
+.side { background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 1px; padding: 12px 10px; position: sticky; top: 0; height: 100dvh; overflow-y: auto; }
+.brand { display: flex; align-items: center; gap: 9px; padding: 4px 8px 12px; font-weight: 700; letter-spacing: -.01em; }
+.brand .mk { width: 24px; height: 24px; border-radius: 6px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: 700 13px var(--mono); }
+.side .sec { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--dim); padding: 14px 8px 4px; display: flex; align-items: center; justify-content: space-between; }
+.side .sec button { border: 0; background: none; color: var(--dim); padding: 0 4px; font-size: 15px; line-height: 1; }
+.nav { display: flex; align-items: center; gap: 9px; padding: 6px 8px; border-radius: 7px; border: 0; background: none; text-align: left; width: 100%; color: var(--soft); min-height: 32px; }
+.nav:hover { background: var(--sunk); }
+.nav.on { background: var(--accent-soft); color: var(--ink); font-weight: 500; }
+.nav .ic { width: 18px; text-align: center; color: var(--dim); flex: none; }
+.nav .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav .n { margin-left: auto; font: 500 11px var(--mono); color: var(--dim); }
+.nav .n.hot { color: #fff; background: var(--amber); border-radius: 999px; padding: 0 6px; }
+.side .foot { margin-top: auto; display: flex; align-items: center; gap: 8px; padding: 10px 6px 2px; border-top: 1px solid var(--line); }
+.side .foot .who { min-width: 0; line-height: 1.25; }
+.side .foot .who span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side .foot .acts { margin-left: auto; display: flex; }
+.side .foot .acts button { border: 0; background: none; color: var(--dim); padding: 4px 6px; border-radius: 6px; }
+.side .foot .acts button:hover { background: var(--sunk); color: var(--ink); }
+
+.main { min-width: 0; display: flex; flex-direction: column; }
+header.top { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 12px; padding: 9px 18px; border-bottom: 1px solid var(--line); background: var(--panel); min-height: 52px; }
+header.top h1 { margin: 0; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+header.top .crumb { color: var(--dim); font-weight: 500; }
+.menu { display: none; border: 1px solid var(--line2); background: var(--panel); border-radius: 7px; width: 32px; height: 32px; }
+.search { margin-left: auto; display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--ground); border-radius: 7px; padding: 0 10px; color: var(--dim); width: min(300px, 40vw); min-height: 32px; }
+.search input { flex: 1; min-width: 0; border: 0; background: transparent; outline: none; color: var(--ink); }
+.search kbd { font: 11px var(--mono); border: 1px solid var(--line2); border-radius: 4px; padding: 0 4px; }
+.spacer { margin-left: auto; }
+
+/* the agents at work in a project, one line each */
+.agents { display: flex; align-items: center; gap: 8px; padding: 8px 18px; border-bottom: 1px solid var(--line); background: var(--panel); overflow-x: auto; scrollbar-width: thin; }
+.ag { display: flex; align-items: center; gap: 8px; padding: 4px 10px 4px 5px; border: 1px solid var(--line); border-radius: 8px; background: var(--ground); white-space: nowrap; font-size: 12.5px; }
+.ag .st { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.ag.waiting { border-color: var(--amber); background: var(--amber-soft); }
+.ag .on { border: 0; background: none; padding: 0; color: var(--ink); font-weight: 500; text-decoration: underline; text-decoration-color: var(--line2); text-underline-offset: 3px; }
+.ag .stp { color: var(--soft); }
+.agents::-webkit-scrollbar { height: 6px; }
+.agents::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 3px; }
+.agents .next { border: 0; background: none; color: var(--soft); font-size: 12.5px; padding: 4px 6px; white-space: nowrap; text-align: left; }
+.agents .next b { font-weight: 500; color: var(--ink); }
+.agents .feed { margin-left: auto; }
+.today { border-bottom: 1px solid var(--line); background: var(--panel); padding: 6px 18px 10px; margin: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; }
+.today li { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 10px; }
+.today time { color: var(--dim); font-family: var(--mono); }
+
+/* the board */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 18px 0; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); font-size: 12px; color: var(--soft); }
+.chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
+.chip .n { color: var(--dim); font: 500 11px var(--mono); }
+.work { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 0; }
+.work.open { grid-template-columns: minmax(0, 1fr) 380px; }
+/* The board fits the window: each column scrolls its own cards, the columns
+   scroll sideways under a bar that is always shown. --above is measured. */
+.columns { min-width: 0; overflow-x: scroll; overflow-y: hidden; padding: 10px 18px 6px; height: calc(100dvh - var(--above, 160px)); min-height: 360px; scrollbar-color: var(--line2) transparent; }
+.columns::-webkit-scrollbar { height: 12px; }
+.columns::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 6px; border: 3px solid var(--ground); }
+.cols { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(196px, 1fr); gap: 10px; height: 100%; }
+.col { display: flex; flex-direction: column; min-height: 0; min-width: 0; border-radius: 10px; }
+.col.over { background: var(--accent-soft); }
+.colhead { display: flex; align-items: center; gap: 7px; padding: 2px 4px 8px; }
+.colhead h2 { margin: 0; font-size: 12.5px; font-weight: 600; }
+.colhead .n { color: var(--dim); font: 500 11.5px var(--mono); }
+.colhead .hint { margin-left: auto; color: var(--dim); font-size: 11.5px; }
+.list { flex: 1 1 auto; overflow-y: auto; min-height: 60px; display: flex; flex-direction: column; gap: 6px; padding: 0 2px 10px; scrollbar-width: thin; scrollbar-color: var(--line2) transparent; }
+.cardbox { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; text-align: left; width: 100%; touch-action: manipulation; user-select: none; -webkit-user-select: none; flex: none; }
+.cardbox:hover { border-color: var(--line2); }
+.cardbox.chosen { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.cardbox .title { font-weight: 500; line-height: 1.32; }
+.cardbox .top, .cardbox .meta { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--dim); flex-wrap: wrap; }
+.cardbox .ref { font-family: var(--mono); }
+.cardbox .place { font: 500 10.5px var(--mono); color: var(--dim); }
+.cardbox .meta .avs { margin-left: auto; }
+.ghost { position: fixed; z-index: 100; pointer-events: none; transform: rotate(1.5deg); box-shadow: var(--shadow); opacity: .96; }
+.placeholder { border: 2px dashed var(--accent); border-radius: 8px; flex: none; }
+.more, .addcard { border: 0; background: transparent; color: var(--dim); text-align: left; padding: 5px 4px; font-size: 12.5px; flex: none; }
+.more:hover, .addcard:hover { color: var(--ink); }
+
+/* a card, opened */
+.panel { border-left: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; min-height: 0; overflow-y: auto; height: calc(100dvh - var(--above, 160px) + 10px); position: sticky; top: 0; }
+.panel .hd { padding: 12px 16px 10px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.panel .hdrow { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--dim); }
+.panel .titlefield { font: 600 17px/1.3 var(--body); background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 2px 4px; margin: 0 -5px; width: calc(100% + 10px); }
+.panel .titlefield:hover, .panel .titlefield:focus { border-color: var(--line2); }
+.kv { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 6px 10px; font-size: 12.5px; align-items: center; margin: 0; }
+.kv dt { color: var(--dim); }
+.kv dd { margin: 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
+.kv .field { min-height: 28px; padding: 3px 8px; }
+.sect { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.quote { margin: 0; padding-left: 10px; border-left: 3px solid var(--accent); color: var(--dim); font-style: italic; }
+.decide { border: 1px solid var(--amber); background: var(--amber-soft); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.decide .q { font-weight: 600; color: var(--amber); font-size: 12px; }
+.decide .opts { display: flex; gap: 6px; flex-wrap: wrap; }
+.thread { display: flex; flex-direction: column; gap: 10px; }
+.msg { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 8px; font-size: 12.5px; }
+.msg .by { color: var(--dim); font-size: 11.5px; }
+.msg .b { line-height: 1.5; overflow-wrap: anywhere; white-space: pre-wrap; }
+.msg .b .mention { color: var(--accent); font-weight: 500; }
+.msg .asks { color: var(--amber); font-size: 11.5px; }
+.files { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.file { display: flex; flex-direction: column; gap: 3px; border: 0; background: none; padding: 0; text-align: left; }
+.file .thumb { height: 84px; border-radius: 7px; border: 1px solid var(--line); background: var(--sunk) center / cover no-repeat; display: grid; place-items: end start; padding: 5px 7px; font: 500 10.5px var(--mono); color: var(--dim); }
+.file .cap { font-size: 12px; line-height: 1.35; }
+.compose { padding: 12px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+.row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.history { font-size: 12px; color: var(--dim); display: flex; flex-direction: column; gap: 3px; }
+.dropzone.over { outline: 2px dashed var(--accent); outline-offset: -6px; }
+
+/* pages */
+.page { padding: 18px; display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 1240px; }
+.page.narrow { max-width: 860px; }
+.page h2.h { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -.01em; text-wrap: balance; }
+.page h3.h { margin: 0; font-size: 14px; font-weight: 600; }
+.lead { color: var(--soft); margin: 0; max-width: 72ch; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; align-items: start; }
+.box { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.box > h3 { margin: 0 0 2px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.box > h3 .n { margin-left: auto; font: 500 11.5px var(--mono); color: var(--dim); }
+.item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 12.5px; min-width: 0; }
+.box > h3 + .item { border-top: 0; }
+.item .tx { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.item button.tx { border: 0; background: none; padding: 0; text-align: left; color: var(--ink); }
+.item button.tx:hover { text-decoration: underline; text-underline-offset: 3px; }
+.item .r { margin-left: auto; display: flex; gap: 6px; align-items: center; flex: none; }
+.wrapx { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+table.t { width: 100%; min-width: 640px; border-collapse: collapse; background: var(--panel); font-size: 12.5px; }
+table.t th { text-align: left; font-weight: 500; color: var(--dim); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 8px 12px; background: var(--sunk); }
+table.t td { padding: 8px 12px; border-top: 1px solid var(--line); vertical-align: middle; }
+.proj { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); }
+.proj .open { border: 0; background: none; padding: 0; text-align: left; display: flex; align-items: center; gap: 10px; }
+.proj .open h3 { margin: 0; font-size: 16px; font-weight: 600; }
+.proj .open:hover h3 { text-decoration: underline; text-underline-offset: 3px; }
+.counts { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.counts span { display: inline-flex; align-items: center; gap: 5px; }
+.proj .doing { font-size: 12.5px; color: var(--soft); padding: 7px 10px; border-radius: 7px; background: var(--sunk); }
+.qlist { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.qitem { display: grid; grid-template-columns: 22px 28px minmax(0, 1fr) auto; gap: 10px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; user-select: none; -webkit-user-select: none; }
+.qitem .grip { color: var(--dim); cursor: grab; font-size: 16px; text-align: center; touch-action: none; }
+.qitem .place { font: 500 13px var(--mono); color: var(--dim); text-align: center; }
+.qitem .acts { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.nowcard { border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 8px; background: var(--panel); padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.split { display: grid; grid-template-columns: minmax(260px, 340px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.dlist { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ditem { display: flex; flex-direction: column; gap: 4px; width: 100%; padding: 10px 12px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line); text-align: left; }
+.ditem.chosen { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.dmain { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.opt { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+.opt.rec { border-color: var(--accent); }
+.opt.chosen { border-color: var(--green); box-shadow: 0 0 0 1px var(--green); }
+.plus { color: var(--green); font-size: 12.5px; }
+.minus { color: var(--red); font-size: 12.5px; }
+.steps { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.step { border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: var(--panel); display: flex; flex-direction: column; gap: 5px; }
+.step .k { font: 500 11px var(--mono); color: var(--accent); letter-spacing: .04em; }
+.guide h3 { margin: 8px 0 0; font-size: 15px; }
+.guide p, .guide li { color: var(--soft); max-width: 72ch; }
+.guide ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+pre.cmd { margin: 0; font: 12px/1.5 var(--mono); background: var(--sunk); border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; overflow-x: auto; color: var(--soft); }
+
+/* sheets, the tour, toasts, the door */
+.sheet { position: fixed; inset: 0; z-index: 60; background: var(--scrim); display: grid; place-items: center; padding: 16px; }
+.sheet form { width: min(500px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.sheet h2 { margin: 0; font-size: 16px; }
+.sheet label { display: grid; gap: 4px; font-size: 12px; color: var(--dim); }
+.checks { display: flex; flex-direction: column; gap: 4px; max-height: 50vh; overflow-y: auto; }
+.checks label { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 13px; }
+.tour { position: fixed; inset: 0; z-index: 70; background: var(--scrim); display: grid; place-items: center; padding: 16px; }
+.tourcard { width: min(540px, 100%); background: var(--panel); border-radius: 14px; box-shadow: var(--shadow); border: 1px solid var(--line); overflow: hidden; }
+.tourcard .body { padding: 18px 20px 14px; display: flex; flex-direction: column; gap: 8px; }
+.tourcard h2 { margin: 0; font-size: 19px; text-wrap: balance; }
+.tourcard p { margin: 0; color: var(--soft); line-height: 1.55; }
+.tourcard .pic { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; padding: 16px 20px; background: var(--sunk); border-bottom: 1px solid var(--line); }
+.tourcard .pic span { height: 20px; border-radius: 5px; background: var(--panel); border: 1px solid var(--line); }
+.tourcard .pic span.hi { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.tourcard .foot { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--line); }
+.pips { display: flex; gap: 5px; }
+.pips span { width: 18px; height: 4px; border-radius: 2px; background: var(--line2); }
+.pips span.on { background: var(--accent); }
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--panel); border-radius: 8px; padding: 9px 14px; z-index: 80; max-width: calc(100% - 32px); box-shadow: var(--shadow); }
+.gate { max-width: 420px; margin: 14vh auto; padding: 22px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; gap: 12px; }
+
+@media (max-width: 1100px) {
+  .work.open { grid-template-columns: minmax(0, 1fr); }
+  .panel { position: fixed; inset: auto 0 0 0; height: auto; max-height: 82dvh; border: 1px solid var(--line); border-radius: 14px 14px 0 0; z-index: 40; box-shadow: var(--shadow); }
+}
+@media (max-width: 860px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .side { position: fixed; z-index: 50; left: 0; top: 0; width: 272px; transform: translateX(-100%); transition: transform .15s; box-shadow: var(--shadow); }
+  .app.menuopen .side { transform: none; }
+  .menu { display: inline-grid; place-items: center; }
+  header.top { padding: 8px 16px; }
+  .search { display: none; }
+  .agents, .chips, .today { padding-left: 16px; padding-right: 16px; }
+  .columns { padding: 10px 16px 6px; }
+  .cols { grid-auto-columns: 78vw; }
+  .page { padding: 16px; }
+  .split { grid-template-columns: minmax(0, 1fr); }
+  .qitem { grid-template-columns: 22px 24px minmax(0, 1fr); }
+  .qitem .acts { grid-column: 1 / -1; justify-content: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) { .side { transition: none; } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+"use strict";
+
+// ---- What this browser keeps ---------------------------------------------
+// Conveniences only: a key for a device outside Google sign-in, the last
+// project and view, the theme, whether the tour was seen.
+
+const STORE = { key: "neuratek-factory-key", project: "neuratek-factory-project", view: "neuratek-factory-view",
+                theme: "neuratek-factory-theme", toured: "neuratek-factory-toured" };
+const kept = {
+  get: (k) => { try { return localStorage.getItem(STORE[k]); } catch (e) { return null; } },
+  set: (k, v) => { try { localStorage.setItem(STORE[k], v); } catch (e) {} },
+  drop: (k) => { try { localStorage.removeItem(STORE[k]); } catch (e) {} },
+};
+let KEY = kept.get("key");
+if (kept.get("theme")) document.documentElement.dataset.theme = kept.get("theme");
+
+// ---- Talking to the API ----------------------------------------------------
+
+// A project's own routes are under its name.
+const P = () => "/api/p/" + encodeURIComponent(S.project);
+
+async function api(path, opts = {}) {
+  // Signed in through Access, the browser's cookie says who; a key is for a
+  // device outside it. X-Factory is what lets a change through from a page.
+  const headers = Object.assign(KEY ? { Authorization: "Bearer " + KEY } : {}, { "X-Factory": "1" }, opts.headers || {});
+  let body = opts.body;
+  if (body !== undefined && !(body instanceof Blob) && !(body instanceof ArrayBuffer)) {
+    headers["Content-Type"] = "application/json";
+    body = JSON.stringify(body);
+  }
+  const r = await fetch(path, { method: opts.method || "GET", headers, body });
+  if (r.status === 401) { signOut(true); throw new Error("not signed in"); }
+  const kind = r.headers.get("content-type") || "";
+  const data = kind.includes("application/json") ? await r.json() : await r.blob();
+  if (!r.ok) throw new Error(data.error || r.statusText);
+  return data;
+}
+
+function signOut(quietly) {
+  const hadKey = !!KEY;
+  KEY = null; S.me = null;
+  kept.drop("key");
+  if (!quietly && !hadKey) { location.href = "/cdn-cgi/access/logout"; return; }
+  render();
+}
+
+// ---- What the page knows ---------------------------------------------------
+
+const COLUMNS = [
+  ["ideas", "Ideas", "asked, not agreed"], ["agreed", "Agreed", ""], ["next", "Next", "the queue"],
+  ["building", "Building", "now"], ["done", "Done", ""], ["parked", "Parked", "held"],
+];
+const COLNAME = Object.fromEntries(COLUMNS.map(([k, n]) => [k, n]));
+const STAGES = [["open", "Open", "var(--c-ideas)"], ["shaping", "Shaping", "var(--c-next)"], ["ready", "Ready", "var(--c-building)"], ["became", "Became cards", "var(--c-done)"], ["parked", "Parked", "var(--c-parked)"]];
+const HUES = ["#3550d6", "#0f8a80", "#b04fa0", "#c9861b", "#6c4fd1", "#1f8a4c", "#c23a3a", "#2f7fb5", "#8a6d1f", "#5a6b8c"];
+const PROJECT_VIEWS = ["board", "queue", "discussions", "decisions", "members"];
+
+const S = {
+  view: kept.get("view") || "board", project: kept.get("project") || "", me: null, projects: [], everywhere: null, mine: null,
+  people: [], members: [], allNow: [], cards: [], queue: [], nows: [], now: null, discussions: [], decisions: [], waiting: null,
+  today: [], area: "", query: "", chosen: null, detail: null, discussion: null, discussionDetail: null, stage: "",
+  feedOpen: false, doneShown: 30, thumbs: {}, lastChange: null, tour: null, menu: false,
+};
+
+function hue(text) {
+  let h = 0;
+  for (const ch of text || "") h = (h * 31 + ch.charCodeAt(0)) % 997;
+  return HUES[h % HUES.length];
+}
+
+function initials(name) {
+  const w = (name || "?").replace(/\(.*\)/, "").trim().split(/\s+/);
+  return ((w[0] || "?")[0] + (w.length > 1 ? w[w.length - 1][0] : "")).toUpperCase();
+}
+
+function el(tag, props, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v === undefined || v === null || v === false) continue;
+    if (k === "class") n.className = v;
+    else if (k === "text") n.textContent = v;
+    else if (k === "style") n.setAttribute("style", v);
+    else if (k === "value") n.value = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const k of kids.flat()) if (k !== null && k !== undefined && k !== false) n.append(k);
+  return n;
+}
+
+const personOf = (id) => S.people.find((p) => p.id === id);
+const nameOf = (id) => (personOf(id) || {}).name || "someone";
+const projectOf = (id) => S.projects.find((p) => p.id === id);
+
+// An avatar for a person, by id, or for whoever signed a change, by name.
+function avatar(who, small) {
+  const p = typeof who === "number" ? personOf(who) : null;
+  const name = p ? p.name : who || "?";
+  const agent = typeof who === "string" && /^(claude|gemini|codex|cursor|aider|agent)/i.test(who);
+  return el("span", { class: "av" + (small ? " s" : "") + (agent ? " agent" : ""), style: "background:" + hue(name), title: name, text: agent ? name[0].toUpperCase() : initials(name) });
+}
+
+function projectMark(p) {
+  return el("span", { class: "pj", style: "background:" + hue(p.id), text: initials(p.name) });
+}
+
+function when(iso) {
+  if (!iso) return "";
+  const d = new Date(iso), n = new Date();
+  const hm = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  if (d.toDateString() === n.toDateString()) return hm;
+  return d.toLocaleDateString([], { day: "numeric", month: "short" }) + ", " + hm;
+}
+
+function minutes(fromIso) {
+  if (!fromIso) return "";
+  const m = Math.max(0, Math.round((Date.now() - new Date(fromIso)) / 60000));
+  return m < 60 ? m + " min" : Math.floor(m / 60) + " h " + (m % 60) + " min";
+}
+
+// Words with @handles shown as mentions.
+function words(text) {
+  const out = [];
+  let last = 0;
+  for (const m of text.matchAll(/(^|[^\w@])(@[a-z0-9._-]+)/gi)) {
+    const at = m.index + m[1].length;
+    out.push(text.slice(last, at), el("span", { class: "mention", text: m[2] }));
+    last = at + m[2].length;
+  }
+  out.push(text.slice(last));
+  return out;
+}
+
+let toastTimer = null;
+function toast(text) {
+  document.querySelectorAll(".toast").forEach((t) => t.remove());
+  const t = el("div", { class: "toast", role: "status", text });
+  document.body.append(t);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.remove(), 3500);
+}
+
+async function attempt(what, fn) {
+  try { return await fn(); } catch (e) { toast(what + ": " + e.message); try { await load(); } catch (err) {} render(); }
+}
+
+const myRole = () => !S.me ? null : S.me.admin ? "admin" : (S.me.roles || {})[S.project] || (projectOf(S.project) || {}).role || null;
+const canWrite = () => myRole() === "admin" || myRole() === "member";
+
+// ---- Loading ------------------------------------------------------------------
+
+// Everything the person reaches first; then the chosen project's board.
+async function load() {
+  const [projects, everywhere, mine, people, allNow] = await Promise.all([
+    api("/api/projects"), api("/api/waiting"), api("/api/mine"), api("/api/people"), api("/api/now"),
+  ]);
+  S.projects = projects.projects; S.everywhere = everywhere; S.mine = mine; S.people = people.people; S.allNow = allNow.now;
+  if (!S.projects.some((p) => p.id === S.project)) S.project = S.projects.length ? S.projects[0].id : "";
+  if (!S.project) {
+    if (PROJECT_VIEWS.includes(S.view)) S.view = "projects";
+    Object.assign(S, { cards: [], queue: [], nows: [], now: null, discussions: [], decisions: [], waiting: null, today: [], members: [] });
+    return;
+  }
+  const midnight = new Date(); midnight.setHours(0, 0, 0, 0);
+  const [cards, queue, now, discussions, decisions, waiting, today, members] = await Promise.all([
+    api(P() + "/cards"), api(P() + "/queue"), api(P() + "/now"), api(P() + "/discussions"),
+    api(P() + "/decisions"), api(P() + "/waiting"), api(P() + "/changes?since=" + midnight.toISOString()), api(P() + "/members"),
+  ]);
+  S.nows = now.now;
+  S.now = S.nows.find((n) => n.state !== "idle" && n.person === S.me.person.id) || S.nows.find((n) => n.state !== "idle") || S.nows[0] || null;
+  S.cards = cards.cards; S.queue = queue.queue; S.discussions = discussions.discussions;
+  S.decisions = decisions.decisions; S.waiting = waiting; S.members = members.members;
+  S.today = today.changes.filter((c) => c.kind !== "now").reverse().slice(0, 20);
+  S.lastChange = today.now;
+  if (S.chosen) S.detail = await api(P() + "/cards/" + encodeURIComponent(S.chosen)).catch(() => null);
+  if (S.discussion) S.discussionDetail = await api(P() + "/discussions/" + S.discussion).catch(() => null);
+}
+
+// Every fifteen seconds, what changed anywhere the person reaches.
+async function poll() {
+  if (!S.me || document.hidden || dragging || document.querySelector(".sheet")) return;
+  try {
+    const c = await api("/api/changes?since=" + encodeURIComponent(S.lastChange || new Date().toISOString()));
+    S.lastChange = c.now;
+    if (c.changes.length) { await load(); render(); }
+  } catch (e) {}
+}
+setInterval(poll, 15000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) poll(); });
+window.addEventListener("resize", measure);
+
+function measure() {
+  const c = document.querySelector(".columns");
+  if (c) document.documentElement.style.setProperty("--above", Math.round(c.getBoundingClientRect().top + window.scrollY) + "px");
+}
+
+// ---- The door ----------------------------------------------------------------------
+
+function gate() {
+  const input = el("input", { class: "field", id: "key", type: "password", autocomplete: "off", placeholder: "kb_…", "aria-label": "A key" });
+  const said = el("p", { class: "dim", style: "margin:0;min-height:1.4em" });
+  return el("form", { class: "gate", onsubmit: async (e) => {
+    e.preventDefault();
+    KEY = input.value.trim();
+    try {
+      S.me = await api("/api/me");
+      kept.set("key", KEY);
+      await load();
+      if (!kept.get("toured")) { S.tour = 0; S.view = TOUR[0].view; }
+      render();
+    } catch (err) { said.textContent = "That key was not taken."; KEY = null; }
+  } },
+    el("div", { class: "brand", style: "padding:0" }, el("span", { class: "mk", text: "F" }), "Neuratek Factory"),
+    el("p", { style: "margin:0", text: "You are not signed in. Reload the page to sign in with your Neuratek Google account; if it does not ask you, an admin has not let you in yet." }),
+    el("p", { class: "dim", style: "margin:0", text: "On a device that cannot sign in that way, paste a key made for it with keys.py. It is kept in this browser only." }),
+    input, said, el("button", { class: "btn go", type: "submit", text: "Open Factory" }));
+}
+
+// ---- The sidebar ---------------------------------------------------------------------
+
+function go(view) {
+  S.view = view; S.menu = false;
+  kept.set("view", view);
+  render();
+}
+
+function chooseProject(id, view) {
+  S.project = id; S.chosen = null; S.detail = null; S.discussion = null; S.discussionDetail = null; S.area = ""; S.query = "";
+  S.view = view || (PROJECT_VIEWS.includes(S.view) ? S.view : "board"); S.menu = false;
+  kept.set("project", id); kept.set("view", S.view);
+  return attempt("Not opened", async () => { await load(); render(); });
+}
+
+// Everything waiting on this person, in every project: their agents
+// stopped for them, questions asked of them, threads where their agent
+// asked, and where they were mentioned.
+function owed() {
+  const w = (S.everywhere && S.everywhere.person) || {};
+  const out = [];
+  for (const n of S.allNow.filter((x) => x.state === "waiting" && x.person === S.me.person.id)) {
+    out.push({ kind: n.author + " waits", text: n.waiting || n.step || "waiting for you", project: n.project, go: () => openIn(n.project, n.card) });
+  }
+  for (const d of w.decisions || []) out.push({ kind: "Question", text: d.question, project: d.project, go: () => d.card ? openIn(d.project, d.card) : chooseProject(d.project, "decisions") });
+  for (const c of w.cards || []) out.push({ kind: "Your agent asks", text: c.title, project: c.project, go: () => openIn(c.project, c.id) });
+  for (const d of w.discussions || []) out.push({ kind: "Discussion", text: d.title, project: d.project, go: () => openDiscussionIn(d.project, d.id) });
+  for (const m of w.mentions || []) out.push({ kind: "Mention", text: m.author + ": " + m.text, project: m.project, mention: m.id,
+    go: () => m.card ? openIn(m.project, m.card) : openDiscussionIn(m.project, m.discussion) });
+  return out;
+}
+
+function sidebar() {
+  const nav = (view, icon, label, n, extra = {}) => el("button", { class: "nav" + ((extra.on ?? S.view === view) ? " on" : ""), type: "button", "data-view": view,
+    onclick: extra.onclick || (() => go(view)) }, el("span", { class: "ic", "aria-hidden": "true", text: icon }), el("span", { class: "nm", text: label }),
+    n ? el("span", { class: "n" + (extra.hot ? " hot" : ""), text: String(n) }) : null);
+  const here = projectOf(S.project);
+  const owedN = owed().length;
+  const waitN = (p) => owed().filter((o) => o.project === p.id).length;
+  const inProject = PROJECT_VIEWS.includes(S.view);
+  return el("aside", { class: "side", "aria-label": "Views and projects" },
+    el("div", { class: "brand" }, el("span", { class: "mk", text: "F" }), "Neuratek Factory"),
+    nav("mine", "◎", "My work", owedN, { hot: owedN > 0 }),
+    nav("projects", "≡", "All projects", S.projects.length),
+    S.me.admin ? nav("people", "☺", "People", S.people.filter((p) => !p.removed).length) : null,
+    nav("guide", "?", "How to use Factory"),
+    el("div", { class: "sec" }, el("span", { text: "Projects" }), S.me.admin ? el("button", { type: "button", title: "New project", "aria-label": "New project", onclick: () => projectSheet() }, "+") : null),
+    S.projects.map((p) => el("button", { class: "nav" + (p.id === S.project && inProject ? " on" : ""), type: "button", "data-project": p.id,
+      onclick: () => chooseProject(p.id, inProject ? S.view : "board") }, projectMark(p), el("span", { class: "nm", text: p.name }),
+      waitN(p) ? el("span", { class: "n hot", text: String(waitN(p)) }) : el("span", { class: "n", text: p.queued ? String(p.queued) : "" }))),
+    S.projects.length ? null : el("p", { class: "dim", style: "padding:4px 8px;margin:0;font-size:12.5px", text: S.me.admin ? "No project yet." : "You are in no project yet. An admin adds you." }),
+    here ? [
+      el("div", { class: "sec" }, el("span", { text: here.name })),
+      nav("board", "▦", "Board", S.cards.length),
+      nav("queue", "↧", "Queue", upcoming().length),
+      nav("discussions", "◌", "Discussions", S.discussions.filter((d) => d.stage !== "became" && d.stage !== "parked").length),
+      nav("decisions", "◇", "Decisions", S.decisions.filter((d) => !d.answer).length),
+      nav("members", "☷", "Members", S.members.length),
+    ] : null,
+    el("div", { class: "foot" }, avatar(S.me.person.id),
+      el("span", { class: "who" }, el("span", { text: S.me.person.name }), el("span", { class: "dim", style: "font-size:11.5px", text: S.me.admin ? "Admin" : myRole() ? myRole()[0].toUpperCase() + myRole().slice(1) : "" })),
+      el("span", { class: "acts" },
+        el("button", { type: "button", title: "Light or dark", "aria-label": "Light or dark", onclick: flipTheme }, "◐"),
+        el("button", { type: "button", title: "The API", "aria-label": "The API", onclick: () => go("api") }, "{}"),
+        el("button", { type: "button", title: "Sign out", "aria-label": "Sign out", onclick: () => signOut(false) }, "⏻"))));
+}
+
+function flipTheme() {
+  const r = document.documentElement;
+  const dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  r.dataset.theme = dark ? "light" : "dark";
+  kept.set("theme", r.dataset.theme);
+}
+
+// ---- The top bar and the agents at work -----------------------------------------------
+
+function topbar() {
+  const here = projectOf(S.project);
+  const titles = { board: "Board", queue: "Queue", discussions: "Discussions", decisions: "Decisions", members: "Members",
+                   mine: "My work", projects: "All projects", people: "People", guide: "How to use Factory", api: "The API" };
+  const inProject = PROJECT_VIEWS.includes(S.view) && here;
+  const search = S.view === "board" && here ? el("label", { class: "search" }, el("span", { "aria-hidden": "true", text: "⌕" }),
+    el("input", { type: "search", value: S.query, placeholder: "Search cards", "aria-label": "Search cards", oninput: (e) => { S.query = e.target.value; renderMain(); } }),
+    el("kbd", { text: "/" })) : el("span", { class: "spacer" });
+  return el("header", { class: "top" },
+    el("button", { class: "menu", type: "button", "aria-label": "Menu", onclick: () => { S.menu = !S.menu; document.querySelector(".app").classList.toggle("menuopen", S.menu); } }, "☰"),
+    el("h1", {}, inProject ? el("span", { class: "crumb", text: here.name + " / " }) : null, inProject || !PROJECT_VIEWS.includes(S.view) ? titles[S.view] || "" : "All projects"),
+    search,
+    inProject && canWrite() ? el("button", { class: "btn go", type: "button", onclick: () => newCardSheet() }, "New card") : null,
+    S.view === "projects" && S.me.admin ? el("button", { class: "btn go", type: "button", onclick: () => projectSheet() }, "New project") : null,
+    S.view === "people" && S.me.admin ? el("button", { class: "btn go", type: "button", onclick: personSheet }, "Add someone") : null);
+}
+
+// The queue without the cards an agent has in hand: those are now, not next.
+function upcoming() {
+  const held = new Set(S.nows.filter((n) => n.state !== "idle" && n.card).map((n) => n.card));
+  return S.queue.filter((q) => !q.card || !held.has(q.card));
+}
+
+function agentsBar() {
+  const live = S.nows.filter((n) => n.state !== "idle" && (n.card || n.step));
+  const ahead = upcoming();
+  const line = (n) => el("span", { class: "ag" + (n.state === "waiting" ? " waiting" : ""), "data-author": n.author },
+    avatar(n.author, true), el("span", { text: n.author }),
+    el("span", { class: "st", style: "background:" + (n.state === "waiting" ? "var(--amber)" : "var(--green)") }),
+    n.card ? el("button", { class: "on", type: "button", onclick: () => openCard(n.card) }, n.title || n.card) : el("span", { class: "on", text: n.step }),
+    n.card && n.step ? el("span", { class: "stp", text: "· " + n.step }) : null,
+    n.waiting ? el("span", { class: "stp", text: "· waiting on " + n.waiting }) : null,
+    el("span", { class: "dim", text: minutes(n.since) }));
+  return [
+    el("section", { class: "agents", "aria-label": "Agents at work here" },
+      live.length ? live.map(line) : el("span", { class: "dim", text: "No agent is working here now." }),
+      ahead.length ? el("button", { class: "next", type: "button", onclick: () => go("queue") },
+        el("span", { class: "dim", text: "Up next " }), el("b", { text: ahead[0].title }), ahead[1] ? ", then " + ahead[1].title : "",
+        el("span", { class: "dim", text: " · " + ahead.length + " in the queue" })) : null,
+      el("button", { class: "btn quiet feed", type: "button", "aria-expanded": String(S.feedOpen), onclick: () => { S.feedOpen = !S.feedOpen; renderMain(); } }, "Today")),
+    S.feedOpen ? el("ol", { class: "today" }, S.today.length ? S.today.map((c) => el("li", {}, el("time", { text: when(c.at) }), el("span", {}, el("b", { style: "font-weight:500", text: c.author + " " }), sentence(c))))
+      : el("li", {}, el("span"), el("span", { class: "dim", text: "Nothing yet today." }))) : null,
+  ];
+}
+
+function titleOf(id) {
+  const c = S.cards.find((x) => x.id === id);
+  return c ? c.title : id;
+}
+
+function sentence(c) {
+  const d = c.data || {};
+  const t = c.card ? "“" + titleOf(c.card) + "”" : "";
+  switch (c.kind) {
+    case "card.new": return "made " + t;
+    case "card.move": return "moved " + t + " to " + (COLNAME[d.to] || d.to);
+    case "card.edit": return "changed " + t;
+    case "card.remove": return "removed “" + (d.title || c.card) + "”";
+    case "note": return (d.asks ? "asked on " : "wrote on ") + t + ": " + (d.text || "").slice(0, 120);
+    case "file": return "added " + (d.name || "a file") + (t ? " to " + t : "") + (d.caption ? ": " + d.caption : "");
+    case "queue.take": return "took " + (t || d.task || "the next task") + " from the queue";
+    case "queue.add": return "queued " + (t || d.task || "a task");
+    case "queue.remove": return "took " + (t || d.task || "a task") + " out of the queue";
+    case "queue.move": return "reordered the queue";
+    case "decision.new": return "asked " + (d.asks_of ? nameOf(d.asks_of) : "someone") + ": " + (d.question || "");
+    case "decision.answer": return "decided: " + (d.answer || "");
+    case "discussion.new": return "started a discussion: " + (d.title || "");
+    case "discussion.edit": return "shaped a discussion";
+    case "message": return "wrote in a discussion: " + (d.text || "").slice(0, 120);
+    case "discussion.card": return "made " + t + " from a discussion";
+    case "member": return "added " + (d.name || "someone") + " as a " + d.role;
+    case "member.remove": return "took " + nameOf(d.person) + " out of the project";
+    case "project.new": return "made the project";
+    case "project.edit": return "changed the project";
+    default: return c.kind;
+  }
+}
+
+// ---- The board -----------------------------------------------------------------------
+
+function shownCards() {
+  const q = S.query.trim().toLowerCase();
+  const me = S.me.person.id;
+  return S.cards.filter((c) => (!S.area || (S.area === "__talk" ? !!c.talk : S.area === "__mine" ? c.owners.includes(me) : c.area === S.area))
+    && (!q || [c.title, c.detail, c.ref, c.quote, c.area].some((v) => (v || "").toLowerCase().includes(q))));
+}
+
+function board() {
+  if (!S.cards.length && !S.query) return [agentsBar(), emptyProject()];
+  const areas = [...new Set(S.cards.map((c) => c.area).filter(Boolean))].sort();
+  const me = S.me.person.id;
+  const chip = (key, name, colour, n) => el("button", { class: "chip", type: "button", "aria-pressed": String(S.area === key),
+    onclick: () => { S.area = S.area === key ? "" : key; renderMain(); } }, colour ? el("span", { class: "dot", style: "background:" + colour }) : null, name, el("span", { class: "n", text: String(n) }));
+  const mineN = S.cards.filter((c) => c.owners.includes(me)).length;
+  const talkN = S.cards.filter((c) => c.talk).length;
+  const chips = el("div", { class: "chips", role: "group", "aria-label": "Filters" },
+    chip("", "Everything", null, S.cards.length), mineN ? chip("__mine", "Mine", "var(--accent)", mineN) : null,
+    talkN ? chip("__talk", "Waiting for a reply", "var(--amber)", talkN) : null,
+    areas.map((a) => chip(a, a, hue(a), S.cards.filter((c) => c.area === a).length)));
+  const shown = shownCards();
+  const cols = el("div", { class: "cols" }, COLUMNS.map(([k, name, hint]) => {
+    let list = shown.filter((c) => c.col === k);
+    const total = list.length;
+    if (k === "done") list = list.slice(0, S.doneShown);
+    return el("section", { class: "col", "data-col": k, "aria-label": name },
+      el("div", { class: "colhead" }, el("span", { class: "dot", style: "background:var(--c-" + k + ")" }),
+        el("h2", { text: name }), el("span", { class: "n", text: String(total) }), el("span", { class: "hint", text: hint })),
+      el("div", { class: "list", "data-col": k }, list.map(cardBox),
+        total > list.length ? el("button", { class: "more", type: "button", onclick: () => { S.doneShown += 60; renderMain(); } }, "Show " + Math.min(60, total - list.length) + " more of " + (total - list.length)) : null,
+        canWrite() ? el("button", { class: "addcard", type: "button", onclick: () => newCardSheet(k) }, "+ Add a card") : null));
+  }));
+  const open = S.chosen && S.detail;
+  return [agentsBar(), chips, el("div", { class: "work" + (open ? " open" : "") }, el("div", { class: "columns" }, cols), open ? panel() : null)];
+}
+
+// An empty project says what it is for and what to do first.
+function emptyProject() {
+  const here = projectOf(S.project);
+  return el("div", { class: "page narrow" },
+    el("h2", { class: "h", text: here.name + " has no cards yet" }),
+    el("p", { class: "lead", text: "A card is one thing to build. Ideas are asked for; Agreed is what will be built; Next is the queue agents take from, in order; Building, Done and Parked say where each one is." }),
+    el("div", { class: "steps" },
+      el("div", { class: "step" }, el("span", { class: "k", text: "FIRST" }), el("b", { text: "Write down an idea" }), el("span", { class: "dim", text: "A card in Ideas, in your own words." })),
+      el("div", { class: "step" }, el("span", { class: "k", text: "THEN" }), el("b", { text: "Agree it and queue it" }), el("span", { class: "dim", text: "Drag it to Next, in the place it belongs." })),
+      el("div", { class: "step" }, el("span", { class: "k", text: "AND" }), el("b", { text: "Connect an agent" }), el("span", { class: "dim", text: "It takes the top of Next and says what it is doing." }))),
+    el("div", { class: "row" },
+      canWrite() ? el("button", { class: "btn go", type: "button", onclick: () => newCardSheet("ideas") }, "Write the first card") : null,
+      el("button", { class: "btn", type: "button", onclick: () => go("guide") }, "How to use Factory")));
+}
+
+function cardBox(c) {
+  const top = [];
+  if (c.queued) top.push(el("span", { class: "place", text: "#" + c.queued }));
+  if (c.ref) top.push(el("span", { class: "ref", text: c.ref }));
+  for (const n of S.nows.filter((x) => x.card === c.id && x.state !== "idle")) top.push(el("span", { class: "tag here", text: n.author }));
+  const meta = [];
+  if (c.area) meta.push(el("span", { class: "tag", text: c.area }));
+  if (S.decisions.some((d) => d.card === c.id && !d.answer)) meta.push(el("span", { class: "tag you", text: "Needs a decision" }));
+  if (c.talk === "claude") meta.push(el("span", { class: "tag here", text: "Waiting for the agent" }));
+  if (c.talk === "person") meta.push(el("span", { class: "tag you", text: c.talk_of === S.me.person.id ? "Waiting for you" : "Waiting for " + nameOf(c.talk_of) }));
+  if (c.files) meta.push(el("span", { class: "dim", text: "📎 " + c.files }));
+  if (c.owners.length) meta.push(el("span", { class: "avs" }, c.owners.slice(0, 3).map((o) => avatar(o, true))));
+  return el("button", { class: "cardbox" + (S.chosen === c.id ? " chosen" : ""), type: "button", "data-id": c.id, "data-col": c.col,
+    onclick: (e) => { if (justDragged) { e.preventDefault(); return; } openCard(c.id); } },
+    top.length ? el("span", { class: "top" }, top) : null,
+    el("span", { class: "title", text: c.title }),
+    meta.length ? el("span", { class: "meta" }, meta) : null);
+}
+
+async function openCard(id) {
+  S.chosen = id; S.view = "board"; S.menu = false;
+  kept.set("view", "board");
+  S.detail = await api(P() + "/cards/" + encodeURIComponent(id)).catch(() => null);
+  render();
+  const n = document.querySelector('.cardbox[data-id="' + CSS.escape(id) + '"]');
+  if (n) n.scrollIntoView({ block: "nearest", inline: "nearest" });
+}
+
+async function openIn(project, card) {
+  if (project !== S.project) await chooseProject(project, "board");
+  if (card) await openCard(card); else go("board");
+}
+
+async function openDiscussionIn(project, id) {
+  if (project !== S.project) await chooseProject(project, "discussions");
+  S.view = "discussions";
+  await openDiscussion(id);
+  render();
+}
+
+function panel() {
+  const d = S.detail, c = d.card;
+  const writable = canWrite();
+  const path = P() + "/cards/" + encodeURIComponent(c.id);
+  const save = (fields) => attempt("Not kept", async () => { await api(path, { method: "PATCH", body: fields }); await load(); renderMain(); });
+  const colSel = el("select", { class: "field", "aria-label": "Column", disabled: !writable, onchange: (e) => moveCard(c.id, e.target.value, null) },
+    COLUMNS.map(([k, n]) => el("option", { value: k, selected: c.col === k, text: n })));
+  const area = el("input", { class: "field", value: c.area, list: "areas", "aria-label": "Area", placeholder: "none", disabled: !writable, onchange: (e) => save({ area: e.target.value }) });
+  const datalist = el("datalist", { id: "areas" }, [...new Set(S.cards.map((x) => x.area).filter(Boolean))].map((a) => el("option", { value: a })));
+  const detail = el("textarea", { class: "field", rows: "3", "aria-label": "Detail", placeholder: "What a person can do once it exists", disabled: !writable, onchange: (e) => save({ detail: e.target.value }) });
+  detail.value = c.detail || "";
+  const open = d.decisions.filter((x) => !x.answer);
+  const items = [...d.notes.map((n) => ({ at: n.at, n })), ...d.files.map((f) => ({ at: f.at, f }))].sort((a, b) => a.at.localeCompare(b.at));
+  const text = el("textarea", { class: "field", rows: "2", placeholder: "Write here - @handle mentions someone", "aria-label": "Write about this card" });
+  const send = () => { if (!text.value.trim()) return; attempt("Not sent", async () => { await api(path + "/notes", { method: "POST", body: { text: text.value } }); text.value = ""; await load(); renderMain(); }); };
+  text.addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send(); });
+  const fileInput = el("input", { type: "file", accept: "image/*,application/pdf,video/mp4,video/webm,text/plain,text/markdown", hidden: true,
+    onchange: (e) => { for (const f of e.target.files) upload(path + "/files", f); } });
+  const q = S.queue.find((e) => e.card === c.id);
+  const agents = S.nows.filter((n) => n.card === c.id && n.state !== "idle");
+
+  const box = el("aside", { class: "panel dropzone", "aria-label": "The open card" },
+    el("div", { class: "hd" },
+      el("div", { class: "hdrow" }, el("span", { class: "mono", text: (c.ref ? c.ref + " · " : "") + COLNAME[c.col] }),
+        el("button", { class: "btn quiet", type: "button", style: "margin-left:auto", "aria-label": "Close", onclick: () => { S.chosen = null; S.detail = null; renderMain(); } }, "✕")),
+      el("input", { class: "titlefield", value: c.title, "aria-label": "Title", disabled: !writable, onchange: (e) => save({ title: e.target.value }) }),
+      el("dl", { class: "kv" },
+        el("dt", { text: "Owners" }), el("dd", {}, c.owners.length ? c.owners.map((o) => el("span", { class: "row", style: "gap:5px" }, avatar(o, true), nameOf(o))) : el("span", { class: "dim", text: "nobody" }),
+          writable ? el("button", { class: "btn quiet", type: "button", style: "min-height:24px;padding:0 6px", onclick: () => ownersSheet(c) }, "Change") : null),
+        agents.length ? [el("dt", { text: "Agent" }), el("dd", {}, agents.map((n) => el("span", { class: "tag here", text: n.author })), el("span", { class: "dim", text: agents[0].step ? agents[0].step + " · " + minutes(agents[0].since) : minutes(agents[0].since) }))] : null,
+        el("dt", { text: "Column" }), el("dd", {}, colSel),
+        el("dt", { text: "Area" }), el("dd", {}, area, datalist),
+        el("dt", { text: "Queue" }), el("dd", {}, q ? el("span", { text: "#" + (S.queue.indexOf(q) + 1) + " in the queue" })
+          : c.col !== "done" && writable ? el("button", { class: "btn", type: "button", style: "min-height:26px", onclick: () => attempt("Not queued", async () => { await api(P() + "/queue", { method: "POST", body: { card: c.id } }); await load(); renderMain(); toast("Added to the queue"); }) }, "Add to the queue") : el("span", { class: "dim", text: "not queued" })))),
+    el("div", { class: "sect" }, el("span", { class: "label", text: "Detail" }), detail, c.quote ? el("p", { class: "quote", text: "“" + c.quote + "”" }) : null),
+    open.length ? el("div", { class: "sect" }, el("span", { class: "label", text: "Decisions" }), open.map((x) => el("div", { class: "decide" },
+      el("span", { class: "q", text: (x.asked_by || "Someone") + " asks " + (x.asked_of === S.me.person.id ? "you" : nameOf(x.asked_of)) }),
+      el("span", { text: x.question }),
+      el("div", { class: "opts" }, x.options.map((o) => el("button", { class: "btn", type: "button", onclick: () => answer(x.id, o) }, o)),
+        el("button", { class: "btn", type: "button", onclick: () => answerSheet(x) }, "In my own words"))))) : null,
+    d.files.some((f) => f.type.startsWith("image/")) ? el("div", { class: "sect" }, el("span", { class: "label", text: "Pictures" }), el("div", { class: "files" }, d.files.filter((f) => f.type.startsWith("image/")).map(fileTile))) : null,
+    el("div", { class: "sect" }, el("span", { class: "label", text: "Talk" }),
+      el("div", { class: "thread" }, items.length ? items.map((it) => it.n ? noteRow(it.n) : fileRow(it.f)) : el("span", { class: "dim", text: "Nothing said yet." }))),
+    el("div", { class: "compose" }, text,
+      el("div", { class: "row" },
+        el("button", { class: "btn go", type: "button", onclick: send }, "Send"),
+        el("button", { class: "btn", type: "button", onclick: () => fileInput.click() }, "Attach"), fileInput,
+        writable && c.col !== "done" ? el("button", { class: "btn done", type: "button", onclick: () => moveCard(c.id, "done", null) }, "Mark done") : null,
+        writable ? el("button", { class: "btn quiet", type: "button", style: "margin-left:auto", onclick: () => removeCard(c) }, "Remove") : null),
+      d.history.length ? el("details", {}, el("summary", { class: "dim", text: "Everything that happened to it" }),
+        el("div", { class: "history" }, d.history.map((h) => el("span", { text: when(h.at) + " · " + h.author + " " + sentence({ ...h, card: c.id }) })))) : null));
+
+  dropFiles(box, (f) => upload(path + "/files", f));
+  return box;
+}
+
+function noteRow(n) {
+  return el("div", { class: "msg" }, avatar(n.author, true), el("div", {},
+    el("div", { class: "by", text: n.author + " · " + when(n.at) }), el("div", { class: "b" }, words(n.text)),
+    n.asks ? el("div", { class: "asks", text: "waiting for " + (n.asks_of === S.me.person.id ? "your" : nameOf(n.asks_of) + "'s") + " answer" }) : null));
+}
+
+function fileRow(f) {
+  return el("div", { class: "msg" }, avatar(f.author, true), el("div", {},
+    el("div", { class: "by", text: f.author + " · " + when(f.at) + " · added " + f.name }), f.caption ? el("div", { class: "b", text: f.caption }) : null,
+    f.type.startsWith("image/") ? null : el("button", { class: "btn", type: "button", style: "margin-top:4px", onclick: () => openFile(f) }, "📎 " + f.name)));
+}
+
+function fileTile(f) {
+  const t = el("span", { class: "thumb", text: f.type.split("/")[1].toUpperCase() });
+  thumb(f, t);
+  return el("button", { class: "file", type: "button", onclick: () => openFile(f) }, t, el("span", { class: "cap", text: f.caption || f.name }));
+}
+
+// A file's bytes come with who is asking, so a picture is fetched and shown
+// from memory rather than linked.
+async function thumb(f, node) {
+  if (!S.thumbs[f.id]) {
+    try { S.thumbs[f.id] = URL.createObjectURL(await api("/api/files/" + f.id)); } catch (e) { return; }
+  }
+  node.style.backgroundImage = "url(" + S.thumbs[f.id] + ")";
+  node.textContent = "";
+}
+
+async function openFile(f) {
+  try {
+    const url = S.thumbs[f.id] || URL.createObjectURL(await api("/api/files/" + f.id));
+    S.thumbs[f.id] = url;
+    window.open(url, "_blank", "noopener");
+  } catch (e) { toast("Could not open it: " + e.message); }
+}
+
+async function upload(path, file) {
+  if (file.size > 15 * 1024 * 1024) { toast(file.name + " is larger than 15 MB"); return; }
+  await attempt("Not added", async () => {
+    await api(path + "?name=" + encodeURIComponent(file.name) + "&caption=" + encodeURIComponent(file.name),
+      { method: "POST", body: file, headers: { "Content-Type": file.type || "application/octet-stream" } });
+    await load(); render(); toast("Added " + file.name);
+  });
+}
+
+function dropFiles(node, take) {
+  node.addEventListener("dragover", (e) => { if (e.dataTransfer && [...e.dataTransfer.types].includes("Files")) { e.preventDefault(); node.classList.add("over"); } });
+  node.addEventListener("dragleave", () => node.classList.remove("over"));
+  node.addEventListener("drop", (e) => { node.classList.remove("over"); if (e.dataTransfer && e.dataTransfer.files.length) { e.preventDefault(); [...e.dataTransfer.files].forEach(take); } });
+}
+
+// A pasted screenshot goes onto the open card or discussion.
+document.addEventListener("paste", (e) => {
+  const files = [...(e.clipboardData ? e.clipboardData.files : [])];
+  if (!files.length) return;
+  if (S.view === "board" && S.chosen) { e.preventDefault(); files.forEach((f) => upload(P() + "/cards/" + encodeURIComponent(S.chosen) + "/files", f)); }
+  else if (S.view === "discussions" && S.discussion) { e.preventDefault(); files.forEach((f) => upload(P() + "/discussions/" + S.discussion + "/files", f)); }
+});
+
+// "/" goes to the search; Escape closes what is open.
+document.addEventListener("keydown", (e) => {
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+  if (e.key === "/" && !typing) { const s = document.querySelector(".search input"); if (s) { e.preventDefault(); s.focus(); } }
+  if (e.key === "Escape" && !document.querySelector(".sheet, .tour") && S.chosen) { S.chosen = null; S.detail = null; renderMain(); }
+});
+
+async function moveCard(id, col, before) {
+  // Shown at once, then told to the board.
+  const c = S.cards.find((x) => x.id === id);
+  if (c) c.col = col;
+  renderMain();
+  await attempt("Not moved", async () => {
+    await api(P() + "/cards/" + encodeURIComponent(id) + "/move", { method: "POST", body: { column: col, before: before || undefined } });
+    await load(); renderMain();
+  });
+}
+
+function removeCard(c) {
+  sheet("Remove “" + c.title + "”?", [el("p", { class: "dim", style: "margin:0", text: "It leaves the board and the queue. It is kept, and can be brought back." })],
+    "Remove", async () => { await api(P() + "/cards/" + encodeURIComponent(c.id), { method: "DELETE" }); S.chosen = null; S.detail = null; await load(); render(); });
+}
+
+async function answer(id, text, said) {
+  await attempt("Not kept", async () => { await api(P() + "/decisions/" + id, { method: "PATCH", body: { answer: text, words: said || "" } }); await load(); render(); toast("Decided"); });
+}
+
+function answerSheet(x) {
+  const a = el("input", { class: "field", placeholder: "The answer", "aria-label": "The answer" });
+  const w = el("textarea", { class: "field", rows: "3", placeholder: "In your words, as you would say it", "aria-label": "In your words" });
+  sheet(x.question, [a, w], "Decide", () => answer(x.id, a.value || w.value, w.value));
+}
+
+function sheet(title, fields, goText, act) {
+  const back = el("div", { class: "sheet", role: "dialog", "aria-modal": "true", "aria-label": title });
+  const close = () => back.remove();
+  back.append(el("form", { onsubmit: async (e) => { e.preventDefault(); await attempt("Not done", act); close(); } },
+    el("h2", { text: title }), fields,
+    el("div", { class: "row", style: "justify-content:flex-end" }, el("button", { class: "btn quiet", type: "button", onclick: close }, "Cancel"), el("button", { class: "btn go", type: "submit" }, goText))));
+  back.addEventListener("click", (e) => { if (e.target === back) close(); });
+  back.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+  document.body.append(back);
+  const first = back.querySelector("input:not([type=checkbox]), textarea, select, button.go");
+  if (first) first.focus();
+}
+
+function ownersSheet(c) {
+  const can = S.members.filter((m) => m.role === "member").concat(S.people.filter((p) => p.admin && !p.removed && !S.members.some((m) => m.id === p.id)));
+  const boxes = can.map((p) => el("label", {}, el("input", { type: "checkbox", value: p.id, checked: c.owners.includes(p.id) }), avatar(p.id, true), p.name, el("span", { class: "dim", text: "@" + p.handle })));
+  sheet("Who is “" + c.title + "” for?", [el("div", { class: "checks" }, boxes.length ? boxes : el("span", { class: "dim", text: "Nobody here can own a card yet." }))], "Keep", async () => {
+    const owners = [...document.querySelectorAll(".sheet .checks input:checked")].map((i) => Number(i.value));
+    await api(P() + "/cards/" + encodeURIComponent(c.id), { method: "PATCH", body: { owners } });
+    await load(); renderMain();
+  });
+}
+
+function newCardSheet(col) {
+  const title = el("input", { class: "field", required: true, placeholder: "What it is", "aria-label": "Title" });
+  const area = el("input", { class: "field", list: "areas2", placeholder: "Area", "aria-label": "Area" });
+  const list = el("datalist", { id: "areas2" }, [...new Set(S.cards.map((x) => x.area).filter(Boolean))].map((a) => el("option", { value: a })));
+  const column = el("select", { class: "field", "aria-label": "Column" }, COLUMNS.map(([k, n]) => el("option", { value: k, selected: (col || "ideas") === k, text: n })));
+  const detail = el("textarea", { class: "field", rows: "3", placeholder: "What a person can do once it exists", "aria-label": "Detail" });
+  const mine = el("input", { type: "checkbox", checked: true });
+  sheet("New card", [title, el("div", { style: "display:grid;grid-template-columns:1fr 1fr;gap:8px" }, area, column), list, detail,
+    el("label", { style: "display:flex;gap:8px;align-items:center;color:var(--ink)" }, mine, "It is mine")], "Add", async () => {
+    const r = await api(P() + "/cards", { method: "POST", body: { title: title.value, area: area.value, column: column.value, detail: detail.value, owners: mine.checked ? [S.me.person.id] : [] } });
+    await load(); render(); toast("Added “" + r.card.title + "”");
+  });
+}
+
+// ---- Dragging cards and queue entries ----------------------------------------------
+// One way for a mouse and a finger: pointer events. A mouse drags after it
+// moves five pixels; a finger after it rests on the card a third of a second,
+// so a swipe still scrolls.
+
+let dragging = null, justDragged = false;
+
+function startDrag(e, node, kind) {
+  const rect = node.getBoundingClientRect();
+  const ghost = node.cloneNode(true);
+  ghost.classList.add("ghost");
+  ghost.style.width = rect.width + "px";
+  ghost.style.left = rect.left + "px";
+  ghost.style.top = rect.top + "px";
+  document.body.append(ghost);
+  const ph = el("div", { class: "placeholder", style: "height:" + rect.height + "px" });
+  node.after(ph);
+  node.hidden = true;
+  dragging = { kind, node, ghost, ph, dx: e.clientX - rect.left, dy: e.clientY - rect.top };
+}
+
+function dragMove(e) {
+  const d = dragging;
+  d.ghost.style.left = e.clientX - d.dx + "px";
+  d.ghost.style.top = e.clientY - d.dy + "px";
+  const under = document.elementFromPoint(e.clientX, e.clientY);
+  document.querySelectorAll(".col.over").forEach((n) => n.classList.remove("over"));
+  if (d.kind === "card") {
+    const col = under && under.closest(".col");
+    const list = col && col.querySelector(".list");
+    if (!list) return;
+    col.classList.add("over");
+    const lr = list.getBoundingClientRect();
+    if (e.clientY > lr.bottom - 40) list.scrollTop += 14;
+    if (e.clientY < lr.top + 40) list.scrollTop -= 14;
+    placeAmong(list, ".cardbox:not([hidden])", e.clientY, list.querySelector(".more, .addcard"));
+    const cols = document.querySelector(".columns");
+    const r = cols.getBoundingClientRect();
+    if (e.clientX > r.right - 50) cols.scrollLeft += 18;
+    if (e.clientX < r.left + 50) cols.scrollLeft -= 18;
+  } else {
+    const list = document.querySelector(".qlist");
+    if (list) placeAmong(list, ".qitem:not([hidden])", e.clientY, null);
+  }
+}
+
+function placeAmong(list, selector, y, tail) {
+  const items = [...list.querySelectorAll(selector)];
+  const after = items.find((n) => { const r = n.getBoundingClientRect(); return y < r.top + r.height / 2; });
+  if (after) after.before(dragging.ph);
+  else if (tail) tail.before(dragging.ph);
+  else list.append(dragging.ph);
+}
+
+async function endDrag() {
+  const d = dragging;
+  dragging = null;
+  d.ghost.remove();
+  document.querySelectorAll(".col.over").forEach((n) => n.classList.remove("over"));
+  justDragged = true;
+  setTimeout(() => { justDragged = false; }, 50);
+  if (d.kind === "card") {
+    const id = d.node.dataset.id;
+    const list = d.ph.closest(".list");
+    if (!list) { d.ph.remove(); d.node.hidden = false; return; }
+    let next = d.ph.nextElementSibling;
+    while (next && !(next.classList.contains("cardbox") && !next.hidden)) next = next.nextElementSibling;
+    d.ph.replaceWith(d.node);
+    d.node.hidden = false;
+    const before = next ? next.dataset.id : null;
+    const col = list.dataset.col;
+    if (col === d.node.dataset.col && before === nextCardId(d.node)) return;
+    await moveCard(id, col, before);
+  } else {
+    let next = d.ph.nextElementSibling;
+    while (next && !(next.classList.contains("qitem") && !next.hidden)) next = next.nextElementSibling;
+    d.ph.replaceWith(d.node);
+    d.node.hidden = false;
+    const id = Number(d.node.dataset.entry);
+    await attempt("Not moved", async () => {
+      await api(P() + "/queue/" + id + "/move", { method: "POST", body: next ? { before: Number(next.dataset.entry) } : {} });
+      await load(); renderMain();
+    });
+  }
+}
+
+function nextCardId(node) {
+  const c = S.cards.find((x) => x.id === node.dataset.id);
+  if (!c) return null;
+  const same = S.cards.filter((x) => x.col === c.col);
+  const i = same.indexOf(c);
+  return same[i + 1] ? same[i + 1].id : null;
+}
+
+document.addEventListener("pointerdown", (e) => {
+  if (e.button !== 0 || dragging || !S.me || !canWrite()) return;
+  const card = e.target.closest(".cardbox");
+  const grip = e.target.closest(".qitem .grip");
+  const node = card || (grip && grip.closest(".qitem"));
+  if (!node) return;
+  const kind = card ? "card" : "queue";
+  const start = { x: e.clientX, y: e.clientY };
+  let timer = null, began = false;
+  const begin = (ev) => { if (began) return; began = true; startDrag(ev, node, kind); };
+  if (e.pointerType !== "mouse") timer = setTimeout(() => { begin(e); if (navigator.vibrate) navigator.vibrate(10); }, kind === "card" ? 330 : 0);
+  const move = (ev) => {
+    if (!began) {
+      if (e.pointerType === "mouse" && Math.hypot(ev.clientX - start.x, ev.clientY - start.y) > 5) begin(ev);
+      else if (e.pointerType !== "mouse" && Math.hypot(ev.clientX - start.x, ev.clientY - start.y) > 10) { clearTimeout(timer); cleanup(); return; }
+      if (!began) return;
+    }
+    ev.preventDefault();
+    dragMove(ev);
+  };
+  const up = () => { clearTimeout(timer); cleanup(); if (began && dragging) endDrag(); };
+  const cleanup = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up); };
+  window.addEventListener("pointermove", move, { passive: false });
+  window.addEventListener("pointerup", up);
+  window.addEventListener("pointercancel", up);
+});
+document.addEventListener("touchmove", (e) => { if (dragging) e.preventDefault(); }, { passive: false });
+
+// ---- The queue ----------------------------------------------------------------------
+
+function queue() {
+  const ahead = upcoming();
+  const live = S.nows.filter((n) => n.state !== "idle" && (n.card || n.step));
+  const writable = canWrite();
+  const move = (entry, body) => attempt("Not moved", async () => { await api(P() + "/queue/" + entry.id + "/move", { method: "POST", body }); await load(); renderMain(); });
+  const task = el("input", { class: "field", style: "flex:1 1 320px", placeholder: "A task that is not a card: deploy the staging build", "aria-label": "A task for the queue" });
+  return el("div", { class: "page narrow" },
+    el("p", { class: "lead", text: "The work plan, in order. An agent takes the top when it finishes what it is on; the board feeds it, and people set the order." }),
+    live.length ? live.map((n) => el("section", { class: "nowcard", "aria-label": "Now" },
+      el("span", { class: "label", text: n.author + (n.state === "waiting" ? " is waiting · " : " · now · ") + minutes(n.since) }),
+      el("span", { style: "font-weight:600;font-size:16px", text: n.title || n.step }),
+      n.card && n.step ? el("span", { class: "dim", text: "Step: " + n.step + (n.waiting ? ". Waiting on " + n.waiting + "." : "") }) : null))
+      : el("section", { class: "nowcard" }, el("span", { class: "label", text: "Now" }), el("span", { text: "No agent is working in this project." })),
+    el("div", { class: "row", style: "align-items:baseline" }, el("h3", { class: "h", text: "Up next" }), el("span", { class: "dim", text: ahead.length + " in the queue" })),
+    ahead.length ? el("ol", { class: "qlist" }, ahead.map((q, i) => el("li", { class: "qitem", "data-entry": q.id },
+      el("span", { class: "grip", "aria-hidden": "true", title: "Drag to reorder", text: writable ? "⠿" : "" }),
+      el("span", { class: "place", text: String(i + 1) }),
+      el("span", { style: "display:flex;flex-direction:column;gap:2px;min-width:0" },
+        el("span", { class: "row" },
+          q.card ? el("button", { type: "button", style: "border:0;background:none;padding:0;font-weight:500;text-align:left", onclick: () => openCard(q.card) }, q.title) : el("span", { style: "font-weight:500", text: q.title }),
+          el("span", { class: "tag", text: q.card ? (q.area || "card") : "task" })),
+        q.ref ? el("span", { class: "dim mono", style: "font-size:12px", text: q.ref }) : null),
+      writable ? el("span", { class: "acts" },
+        el("button", { class: "btn quiet", type: "button", "aria-label": "Move up", disabled: i === 0, onclick: () => move(q, { before: ahead[i - 1].id }) }, "↑"),
+        el("button", { class: "btn quiet", type: "button", "aria-label": "Move down", disabled: i === ahead.length - 1, onclick: () => move(q, ahead[i + 2] ? { before: ahead[i + 2].id } : {}) }, "↓"),
+        el("button", { class: "btn quiet", type: "button", disabled: i === 0, onclick: () => move(q, { top: true }) }, "To the top"),
+        el("button", { class: "btn quiet", type: "button", onclick: () => attempt("Not taken out", async () => { await api(P() + "/queue/" + q.id, { method: "DELETE" }); await load(); renderMain(); toast(q.card ? "Out of the queue - back in Agreed" : "Out of the queue"); }) }, "Out")) : null)))
+      : el("p", { class: "empty", text: "The queue is empty. Drag a card into Next on the board, or add a task here." }),
+    writable ? el("form", { class: "row", onsubmit: (e) => { e.preventDefault(); if (!task.value.trim()) return; attempt("Not added", async () => { await api(P() + "/queue", { method: "POST", body: { title: task.value } }); task.value = ""; await load(); renderMain(); }); } },
+      task, el("button", { class: "btn go", type: "submit" }, "Add to the end")) : null);
+}
+
+// ---- Discussions ----------------------------------------------------------------------
+
+function discussions() {
+  const list = S.discussions.filter((d) => !S.stage || d.stage === S.stage);
+  const stageOf = (k) => STAGES.find((s) => s[0] === k) || STAGES[0];
+  const chips = el("div", { class: "row", role: "group", "aria-label": "Stages" },
+    [["", "All", null]].concat(STAGES).map(([k, n, c]) => el("button", { class: "chip", type: "button", "aria-pressed": String(S.stage === k), onclick: () => { S.stage = k; renderMain(); } },
+      c ? el("span", { class: "dot", style: "background:" + c }) : null, n, el("span", { class: "n", text: String(k ? S.discussions.filter((d) => d.stage === k).length : S.discussions.length) }))));
+  const items = list.map((d) => {
+    const [, sn, sc] = stageOf(d.stage);
+    return el("button", { class: "ditem" + (S.discussion === d.id ? " chosen" : ""), type: "button", onclick: () => openDiscussion(d.id) },
+      el("span", { class: "row", style: "font-size:11.5px" }, el("span", { class: "dot", style: "background:" + sc }), sn,
+        d.talk === "claude" ? el("span", { class: "tag here", text: "Waiting for the agent" }) : d.talk === "person" ? el("span", { class: "tag you", text: d.talk_of === S.me.person.id ? "Waiting for you" : "Waiting for " + nameOf(d.talk_of) }) : null,
+        el("span", { class: "dim", style: "margin-left:auto", text: when(d.updated) })),
+      el("span", { style: "font-weight:500", text: d.title }),
+      d.summary ? el("span", { class: "dim", style: "font-size:12.5px", text: d.summary.slice(0, 120) }) : null);
+  });
+  return el("div", { class: "page" },
+    el("div", { class: "row" }, el("p", { class: "lead", style: "flex:1", text: "Ideas talked through in order before they become cards: the options, what each gains and costs, and the questions still open." }),
+      canWrite() ? el("button", { class: "btn go", type: "button", onclick: newDiscussionSheet }, "Start a discussion") : null),
+    el("div", { class: "split" }, el("aside", { class: "dlist", "aria-label": "Discussions" }, chips, items.length ? items : el("p", { class: "empty", text: "No discussion yet. Start one with an idea in your own words." })),
+      S.discussion && S.discussionDetail ? discussion() : el("div", { class: "dmain" }, el("p", { class: "empty", text: "Choose a discussion, or start one." }))));
+}
+
+async function openDiscussion(id) {
+  S.discussion = id;
+  S.discussionDetail = await api(P() + "/discussions/" + id).catch(() => null);
+  renderMain();
+}
+
+function discussion() {
+  const { discussion: d, messages, cards, files } = S.discussionDetail;
+  const [, sn, sc] = STAGES.find((s) => s[0] === d.stage) || STAGES[0];
+  const writable = canWrite();
+  const path = P() + "/discussions/" + d.id;
+  const patch = (body) => attempt("Not kept", async () => { await api(path, { method: "PATCH", body }); await load(); renderMain(); });
+  const text = el("textarea", { class: "field", rows: "3", placeholder: "Write here - @handle mentions someone", "aria-label": "Your reply" });
+  const fileInput = el("input", { type: "file", hidden: true, accept: "image/*,application/pdf,video/mp4,video/webm,text/plain,text/markdown", onchange: (e) => { for (const f of e.target.files) upload(path + "/files", f); } });
+  const items = [...messages.map((m) => ({ at: m.at, m })), ...files.map((f) => ({ at: f.at, f }))].sort((a, b) => a.at.localeCompare(b.at));
+  const main = el("div", { class: "dmain dropzone" },
+    el("div", { class: "row" }, el("span", { class: "dot", style: "background:" + sc }), el("span", { text: sn }),
+      el("span", { class: "dim", style: "font-size:12.5px", text: "· started by " + d.author + ", " + when(d.created) + " · " + messages.length + " messages" }),
+      writable ? el("span", { class: "row", style: "margin-left:auto" },
+        d.stage !== "ready" && d.stage !== "became" ? el("button", { class: "btn", type: "button", onclick: () => patch({ stage: "ready" }) }, "Mark ready") : null,
+        d.stage !== "parked" ? el("button", { class: "btn quiet", type: "button", onclick: () => patch({ stage: "parked" }) }, "Park it")
+          : el("button", { class: "btn", type: "button", onclick: () => patch({ stage: "shaping" }) }, "Take it up again")) : null),
+    el("h2", { class: "h", text: d.title }),
+    el("div", { class: "grid", style: "grid-template-columns:repeat(auto-fit,minmax(240px,1fr))" },
+      el("section", { class: "box" }, el("span", { class: "label", text: "The idea, in its asker's words" }), el("span", { style: "font-style:italic;color:var(--soft)", text: d.idea ? "“" + d.idea + "”" : "-" }),
+        el("span", { class: "label", style: "margin-top:6px", text: "What it is for" }), el("span", { text: d.purpose || "-" })),
+      el("section", { class: "box" }, el("span", { class: "label", text: "Where it stands" }),
+        el("span", { style: "line-height:1.5", text: d.summary || "The agent writes this once the idea has been talked through." }))),
+    d.options.length ? el("section", { style: "display:flex;flex-direction:column;gap:8px" }, el("h3", { class: "h", text: "Options" }),
+      el("div", { class: "grid", style: "grid-template-columns:repeat(auto-fit,minmax(240px,1fr))" }, d.options.map((o, i) => el("article", { class: "opt" + (o.recommended ? " rec" : "") + (o.chosen ? " chosen" : "") },
+        el("span", { class: "row" }, el("span", { style: "font-weight:600", text: o.name }),
+          o.recommended ? el("span", { class: "tag here", text: "Recommended" }) : null, o.chosen ? el("span", { class: "tag ok", text: "Chosen" }) : null),
+        o.plus ? el("span", { class: "plus", text: "+ " + o.plus }) : null, o.minus ? el("span", { class: "minus", text: "− " + o.minus }) : null,
+        o.chosen || !writable ? null : el("button", { class: "btn", type: "button", style: "align-self:flex-start", onclick: () => patch({ options: d.options.map((x, j) => ({ ...x, chosen: j === i })) }) }, "Choose this"))))) : null,
+    d.questions.length ? el("section", { class: "decide" }, el("span", { class: "q", text: "Still open" }), d.questions.map((q) => el("span", { text: q }))) : null,
+    cards.length ? el("section", { class: "box" }, el("span", { class: "label", text: "Became" }), cards.map((c) => el("button", { type: "button", style: "border:0;background:none;padding:0;text-align:left;color:var(--accent)", onclick: () => openCard(c.id) }, c.title + " · " + (COLNAME[c.col] || c.col)))) : null,
+    files.some((f) => f.type.startsWith("image/")) ? el("div", { class: "files" }, files.filter((f) => f.type.startsWith("image/")).map(fileTile)) : null,
+    el("h3", { class: "h", text: "The conversation" }),
+    el("div", { class: "thread" }, items.length ? items.map((it) => it.m ? noteRow(it.m) : fileRow(it.f)) : el("span", { class: "dim", text: "Nothing said yet." })),
+    text,
+    el("div", { class: "row" },
+      el("button", { class: "btn go", type: "button", onclick: () => { if (!text.value.trim()) return; attempt("Not sent", async () => { await api(path + "/messages", { method: "POST", body: { text: text.value } }); text.value = ""; await load(); renderMain(); }); } }, "Send"),
+      el("button", { class: "btn", type: "button", onclick: () => fileInput.click() }, "Attach"), fileInput,
+      writable ? el("button", { class: "btn", type: "button", onclick: () => makeCardSheet(d) }, "Make it a card") : null));
+  dropFiles(main, (f) => upload(path + "/files", f));
+  return main;
+}
+
+function newDiscussionSheet() {
+  const title = el("input", { class: "field", required: true, placeholder: "The idea, in a line", "aria-label": "Title" });
+  const idea = el("textarea", { class: "field", rows: "3", placeholder: "In your own words", "aria-label": "The idea" });
+  const purpose = el("input", { class: "field", placeholder: "What it is for", "aria-label": "What it is for" });
+  sheet("Start a discussion", [title, idea, purpose], "Start", async () => {
+    const r = await api(P() + "/discussions", { method: "POST", body: { title: title.value, idea: idea.value, for: purpose.value } });
+    await load(); await openDiscussion(r.discussion.id); render();
+  });
+}
+
+function makeCardSheet(d) {
+  const title = el("input", { class: "field", required: true, value: d.title, "aria-label": "The card's title" });
+  const area = el("input", { class: "field", list: "areas3", placeholder: "Area", "aria-label": "Area" });
+  const list = el("datalist", { id: "areas3" }, [...new Set(S.cards.map((x) => x.area).filter(Boolean))].map((a) => el("option", { value: a })));
+  const column = el("select", { class: "field", "aria-label": "Column" }, COLUMNS.slice(0, 3).map(([k, n]) => el("option", { value: k, selected: k === "agreed", text: n })));
+  sheet("Make it a card", [title, area, column, list], "Make the card", async () => {
+    await api(P() + "/discussions/" + d.id + "/cards", { method: "POST", body: { title: title.value, area: area.value, column: column.value } });
+    await load(); renderMain(); toast("A card made from it");
+  });
+}
+
+// ---- Decisions ---------------------------------------------------------------------
+
+function decisions() {
+  const open = S.decisions.filter((x) => !x.answer);
+  const done = S.decisions.filter((x) => x.answer);
+  return el("div", { class: "page" },
+    el("h3", { class: "h", text: "Open" }),
+    open.length ? el("div", { class: "grid" }, open.map((x) => el("article", { class: "decide" },
+      el("span", { class: "q", text: (x.asked_by || "Someone") + " asks " + (x.asked_of === S.me.person.id ? "you" : nameOf(x.asked_of)) }),
+      x.card ? el("button", { type: "button", style: "border:0;background:none;padding:0;text-align:left;font-size:12px;color:var(--accent)", onclick: () => openCard(x.card) }, titleOf(x.card)) : null,
+      el("span", { style: "font-weight:600;font-size:15px", text: x.question }),
+      el("div", { class: "opts" }, x.options.map((o) => el("button", { class: "btn", type: "button", onclick: () => answer(x.id, o) }, o)),
+        el("button", { class: "btn", type: "button", onclick: () => answerSheet(x) }, "In my own words")))))
+      : el("p", { class: "empty", text: "No question is open in this project." }),
+    el("div", { class: "row", style: "align-items:baseline" }, el("h3", { class: "h", text: "Decided" }), el("span", { class: "dim", text: "each in its answerer's words, newest first" })),
+    done.length ? el("div", { class: "wrapx" }, el("table", { class: "t" },
+      el("thead", {}, el("tr", {}, el("th", { text: "When" }), el("th", { text: "Decision" }), el("th", { text: "In their words" }), el("th", { text: "Card" }))),
+      el("tbody", {}, done.map((x) => el("tr", {},
+        el("td", { class: "mono dim", style: "white-space:nowrap", text: (x.answered || x.asked || "").slice(0, 10) }),
+        el("td", {}, el("div", { style: "font-weight:500", text: x.question }), el("div", { style: "color:var(--green)", text: x.answer + (x.answered_by ? " · " + x.answered_by : "") })),
+        el("td", { style: "font-style:italic;color:var(--soft)", text: x.words ? "“" + x.words + "”" : "" }),
+        el("td", {}, x.card ? el("button", { type: "button", style: "border:0;background:none;padding:0;color:var(--accent);text-align:left", onclick: () => openCard(x.card) }, titleOf(x.card)) : "")))))) : el("p", { class: "dim", style: "margin:0", text: "Nothing decided yet." }));
+}
+
+// ---- Members -------------------------------------------------------------------------
+
+function members() {
+  const admin = S.me.admin;
+  const outside = S.people.filter((p) => !p.removed && !p.admin && !S.members.some((m) => m.id === p.id));
+  const who = el("select", { class: "field", "aria-label": "Someone to add" }, outside.map((p) => el("option", { value: p.id, text: p.name + " · " + p.email })));
+  const role = el("select", { class: "field", "aria-label": "As" }, el("option", { value: "member", text: "Member - edits" }), el("option", { value: "viewer", text: "Viewer - reads" }));
+  const setRole = (p, r) => attempt("Not changed", async () => { await api(P() + "/members/" + p.id, { method: "PUT", body: { role: r } }); await load(); renderMain(); });
+  return el("div", { class: "page narrow" },
+    el("p", { class: "lead", text: "Who is in this project. A member edits; a viewer reads. Admins reach every project without being listed." }),
+    S.members.length ? el("div", { class: "wrapx" }, el("table", { class: "t", style: "min-width:520px" },
+      el("thead", {}, el("tr", {}, el("th", { text: "Person" }), el("th", { text: "Mentioned as" }), el("th", { text: "Role" }), el("th", { text: "" }))),
+      el("tbody", {}, S.members.map((p) => el("tr", { "data-person": p.id },
+        el("td", {}, el("span", { class: "row" }, avatar(p.id, true), el("span", {}, p.name, el("div", { class: "dim", style: "font-size:11.5px", text: p.email })))),
+        el("td", { class: "mono dim", text: "@" + p.handle }),
+        el("td", {}, admin ? el("select", { class: "field", "aria-label": "Role of " + p.name, onchange: (e) => setRole(p, e.target.value) },
+          ["member", "viewer"].map((r) => el("option", { value: r, selected: p.role === r, text: r[0].toUpperCase() + r.slice(1) }))) : el("span", { class: "tag", text: p.role })),
+        el("td", { style: "text-align:right" }, admin ? el("button", { class: "btn quiet", type: "button", onclick: () => attempt("Not taken out", async () => { await api(P() + "/members/" + p.id, { method: "DELETE" }); await load(); renderMain(); }) }, "Take out") : null)))))) : el("p", { class: "empty", text: "Nobody has been added to this project yet." }),
+    admin ? el("form", { class: "row", onsubmit: (e) => { e.preventDefault(); if (!who.value) return; setRole({ id: Number(who.value) }, role.value); } },
+      outside.length ? [who, role, el("button", { class: "btn go", type: "submit" }, "Add to the project")] : el("span", { class: "dim", text: "Everyone who has signed in is here. Someone new appears once they sign in, or once added under People." })) : null);
+}
+
+// ---- My work -----------------------------------------------------------------------
+
+function mine() {
+  const list = owed();
+  const pmark = (id) => { const p = projectOf(id); return p ? projectMark(p) : null; };
+  const owned = (S.mine && S.mine.owned) || [];
+  const myAgents = S.allNow.filter((n) => n.person === S.me.person.id);
+  return el("div", { class: "page" },
+    el("p", { class: "lead", text: "Everything that is yours, in every project you are in: what waits for you, the cards you own, and what your agents are doing." }),
+    el("div", { class: "grid" },
+      el("section", { class: "box", "aria-label": "Waiting for you" }, el("h3", {}, el("span", { class: "dot", style: "background:var(--amber)" }), "Waiting for you", el("span", { class: "n", text: String(list.length) })),
+        list.length ? list.map((n) => el("div", { class: "item" }, el("span", { class: "tag you", text: n.kind }), el("button", { class: "tx", type: "button", onclick: n.go, text: n.text }),
+          el("span", { class: "r" }, n.mention ? el("button", { class: "btn quiet", type: "button", style: "min-height:24px;padding:0 6px", onclick: () => attempt("Not kept", async () => { await api("/api/mentions/" + n.mention + "/done", { method: "POST" }); await load(); render(); }) }, "Seen") : null, pmark(n.project))))
+          : el("span", { class: "dim", text: "Nothing waits for you." })),
+      el("section", { class: "box", "aria-label": "Your cards" }, el("h3", {}, el("span", { class: "dot", style: "background:var(--accent)" }), "Your cards", el("span", { class: "n", text: String(owned.length) })),
+        owned.length ? owned.map((c) => el("div", { class: "item" }, c.ref ? el("span", { class: "mono dim", text: c.ref }) : null, el("button", { class: "tx", type: "button", onclick: () => openIn(c.project, c.id), text: c.title }),
+          el("span", { class: "r" }, el("span", { class: "tag", text: COLNAME[c.col] }), pmark(c.project))))
+          : el("span", { class: "dim", text: "No card is yours yet. A card's owners are set in its pane." })),
+      el("section", { class: "box", "aria-label": "Your agents" }, el("h3", {}, el("span", { class: "dot", style: "background:var(--green)" }), "Your agents", el("span", { class: "n", text: String(myAgents.length) })),
+        myAgents.length ? myAgents.map((n) => el("div", { class: "item" }, avatar(n.author, true), el("span", { class: "tx", text: n.author }),
+          el("span", { class: "r" }, el("span", { class: n.state === "waiting" ? "tag you" : n.state === "idle" ? "tag" : "tag here", text: n.state === "waiting" ? "waiting" : n.state === "idle" ? "idle" : (n.title || n.step || "working") }), pmark(n.project))))
+          : el("span", { class: "dim", text: "None of your agents has worked yet. How to use Factory says how to connect one." }))));
+}
+
+// ---- All projects --------------------------------------------------------------------
+
+function overview() {
+  const doing = (p) => {
+    const live = p.now.filter((n) => n.state !== "idle");
+    if (!live.length) return "No agent at work here";
+    const n = live[0];
+    return n.author + (n.state === "waiting" ? " is waiting" + (n.waiting ? " on " + n.waiting : "") : " is working") + (n.title || n.step ? " · " + (n.title || n.step) : "")
+      + (live.length > 1 ? " · and " + (live.length - 1) + " more" : "");
+  };
+  const owedIn = (id) => owed().filter((o) => o.project === id).length;
+  return el("div", { class: "page" },
+    el("p", { class: "lead", text: S.projects.length + (S.projects.length === 1 ? " project" : " projects") + " you reach, each with its own board, queue, discussions and people." }),
+    S.projects.length ? el("div", { class: "grid" }, S.projects.map((p) => el("article", { class: "proj", "data-project": p.id },
+      el("button", { class: "open", type: "button", onclick: () => chooseProject(p.id, "board") }, projectMark(p), el("h3", { text: p.name }),
+        el("span", { class: "tag", style: "margin-left:auto", text: p.role || "" })),
+      p.detail ? el("span", { class: "dim", text: p.detail }) : null,
+      el("span", { class: "counts" }, COLUMNS.map(([k, n]) => el("span", {}, el("span", { class: "dot", style: "background:var(--c-" + k + ")" }), n + " " + (p.cards[k] || 0)))),
+      el("span", { class: "doing", text: doing(p) + (p.queued ? " · " + p.queued + " in the queue" : "") }),
+      el("span", { class: "row" },
+        owedIn(p.id) ? el("span", { class: "tag you", text: "Needs you · " + owedIn(p.id) }) : el("span", { class: "dim", style: "font-size:12.5px", text: "Nothing waits for you" }),
+        el("span", { class: "dim", style: "font-size:12.5px", text: "· " + p.members + (p.members === 1 ? " person" : " people") }),
+        S.me.admin ? el("span", { class: "row", style: "margin-left:auto" },
+          el("button", { class: "btn quiet", type: "button", onclick: () => projectSheet(p) }, "Rename"),
+          el("button", { class: "btn quiet", type: "button", onclick: () => sheet("Put “" + p.name + "” away?", [el("p", { class: "dim", style: "margin:0", text: "It leaves the sidebar and this list. Nothing in it is deleted, and it can be brought back through the API." })],
+            "Put away", async () => { await api("/api/projects/" + encodeURIComponent(p.id), { method: "PATCH", body: { archived: true } }); await load(); render(); }) }, "Put away")) : null))))
+      : el("p", { class: "empty", text: S.me.admin ? "No project yet. Make one, and its board, queue and discussions come with it." : "You are in no project yet. An admin adds you to one." }));
+}
+
+function projectSheet(p) {
+  const name = el("input", { class: "field", required: true, value: p ? p.name : "", placeholder: "Its name", "aria-label": "Name" });
+  const id = el("input", { class: "field", placeholder: "payments-api", pattern: "[a-z0-9][a-z0-9\\-]{0,39}", "aria-label": "Short name" });
+  const detail = el("input", { class: "field", value: p ? p.detail : "", placeholder: "What it is", "aria-label": "What it is" });
+  sheet(p ? "Rename " + p.name : "New project", p ? [el("label", {}, "Name", name), el("label", {}, "What it is", detail)]
+    : [el("label", {}, "Name", name), el("label", {}, "Short name, in the API's paths - made from the name if left empty", id), el("label", {}, "What it is", detail)], p ? "Keep" : "Make it", async () => {
+    if (p) {
+      await api("/api/projects/" + encodeURIComponent(p.id), { method: "PATCH", body: { name: name.value, detail: detail.value } });
+      await load(); render();
+    } else {
+      const r = await api("/api/projects", { method: "POST", body: { name: name.value, detail: detail.value, id: id.value.trim() || undefined } });
+      await chooseProject(r.project.id, "members");
+      toast("Made " + r.project.name + " - now add its people");
+    }
+  });
+}
+
+// ---- People (admins) -----------------------------------------------------------------
+
+function people() {
+  const edit = (p, body, what) => attempt(what, async () => { await api("/api/people/" + p.id, { method: "PATCH", body }); await load(); renderMain(); });
+  const list = S.people.slice().sort((a, b) => (!!a.removed - !!b.removed) || a.name.localeCompare(b.name));
+  return el("div", { class: "page" },
+    el("p", { class: "lead", text: "Everyone who can use Factory. Someone who signs in with their Neuratek Google account appears here by themselves, in no project; add them to projects under each project's Members. Someone who leaves is removed here, and nothing of theirs answers after." }),
+    el("div", { class: "wrapx" }, el("table", { class: "t" },
+      el("thead", {}, el("tr", {}, el("th", { text: "Person" }), el("th", { text: "Projects" }), el("th", { text: "Last seen" }), el("th", { text: "Admin" }), el("th", { text: "" }))),
+      el("tbody", {}, list.map((p) => el("tr", { "data-person": p.id, style: p.removed ? "opacity:.55" : null },
+        el("td", {}, el("span", { class: "row" }, avatar(p.id, true), el("span", {}, p.name + " ", el("span", { class: "dim mono", text: "@" + p.handle }), el("div", { class: "dim", style: "font-size:11.5px", text: p.email })))),
+        el("td", {}, el("span", { class: "row" }, (p.projects || []).map((m) => { const pr = projectOf(m.project); return el("span", { class: "tag", title: m.role, text: (pr ? pr.name : m.project) + (m.role === "viewer" ? " · viewer" : "") }); }))),
+        el("td", { class: "dim", text: p.seen ? when(p.seen) : "never" }),
+        el("td", {}, el("input", { type: "checkbox", checked: p.admin, disabled: p.id === S.me.person.id || !!p.removed, "aria-label": p.name + " is an admin", onchange: (e) => edit(p, { admin: e.target.checked }, "Not changed") })),
+        el("td", { style: "text-align:right" }, p.id === S.me.person.id ? null : p.removed
+          ? el("button", { class: "btn quiet", type: "button", onclick: () => edit(p, { removed: false }, "Not brought back") }, "Bring back")
+          : el("button", { class: "btn quiet", type: "button", onclick: () => sheet("Remove " + p.name + "?", [el("p", { class: "dim", style: "margin:0", text: "They can no longer sign in, and every key of theirs - their agents' too - stops answering. What they wrote stays." })], "Remove", async () => { await api("/api/people/" + p.id, { method: "PATCH", body: { removed: true } }); await load(); renderMain(); }) }, "Remove"))))))));
+}
+
+function personSheet() {
+  const email = el("input", { class: "field", type: "email", required: true, placeholder: "name@neuratek.com", "aria-label": "Address" });
+  const name = el("input", { class: "field", placeholder: "Their name", "aria-label": "Name" });
+  const admin = el("input", { type: "checkbox" });
+  sheet("Add someone", [el("label", {}, "Their Google address", email), el("label", {}, "Name", name),
+    el("label", { style: "display:flex;gap:8px;align-items:center;color:var(--ink)" }, admin, "An admin")], "Add", async () => {
+    await api("/api/people", { method: "POST", body: { email: email.value, name: name.value, admin: admin.checked } });
+    await load(); renderMain(); toast("Added - they sign in with Google");
+  });
+}
+
+// ---- How to use Factory --------------------------------------------------------------
+
+function guide() {
+  return el("div", { class: "page narrow guide" },
+    el("h2", { class: "h", text: "How to use Factory" }),
+    el("p", { class: "lead", text: "Factory is where Neuratek decides what to build and in what order, and where coding agents - Claude, Gemini, Codex and others - take that work, say what they are doing, ask when they need a person, and hand back what they built." }),
+    el("div", { class: "row" }, el("button", { class: "btn go", type: "button", onclick: () => startTour() }, "Take the tour")),
+    el("div", { class: "steps" },
+      el("div", { class: "step" }, el("span", { class: "k", text: "PEOPLE" }), el("b", { text: "Plan" }), el("span", { class: "dim", text: "Ideas become cards; cards are agreed and put in order in Next." })),
+      el("div", { class: "step" }, el("span", { class: "k", text: "AGENTS" }), el("b", { text: "Build" }), el("span", { class: "dim", text: "An agent takes the top of the queue and says each step it takes." })),
+      el("div", { class: "step" }, el("span", { class: "k", text: "PEOPLE" }), el("b", { text: "Decide" }), el("span", { class: "dim", text: "When an agent needs you it asks; it shows in My work." })),
+      el("div", { class: "step" }, el("span", { class: "k", text: "BOTH" }), el("b", { text: "Finish" }), el("span", { class: "dim", text: "The work is checked, and its card goes to Done." }))),
+    el("h3", { text: "Projects and people" }),
+    el("ul", {}, el("li", { text: "You sign in with your Neuratek Google account. An admin adds you to the projects you work on, as a member who edits or a viewer who reads." }),
+      el("li", { text: "The sidebar lists your projects. My work, at the top, gathers what is yours across all of them." })),
+    el("h3", { text: "The board" }),
+    el("ul", {}, el("li", { text: "Ideas are asked for, not yet agreed. Agreed will be built. Next is the queue, in order. Building is under way. Done is finished. Parked is held for later." }),
+      el("li", { text: "Drag a card to move it - with a finger, rest on it a moment first. Dropping it into Next puts it in the queue where you dropped it." }),
+      el("li", { text: "Open a card to edit it, give it owners, answer its questions, and talk about it. Paste a screenshot while it is open and it is attached." }),
+      el("li", { text: "Write @ and someone's handle - shown under Members - and it reaches their My work until they answer in that thread." })),
+    el("h3", { text: "The queue and the agents" }),
+    el("ul", {}, el("li", { text: "When an agent finishes its card, it takes the top of the queue. Moving a card up is how you say what matters now." }),
+      el("li", { text: "The strip above the board shows every agent at work here: whose it is, its card, its step, and what it is waiting on." }),
+      el("li", { text: "An agent that needs a decision asks the person it works for; the question waits in their My work, and on the card." })),
+    el("h3", { text: "Discussions and decisions" }),
+    el("ul", {}, el("li", { text: "An idea that needs thinking through starts as a discussion: options with what each gains and costs, and the questions still open. When it is clear, it becomes cards." }),
+      el("li", { text: "Decisions lists every question in the project, open and answered, each answer in the words it was given." })),
+    el("h3", { text: "Connecting your agent" }),
+    el("p", { text: "Each agent has a key of its own, made for you by an admin for now, named after you - \"Claude (Ana)\" - so the board says whose agent did what. The agent uses Factory's API with it; connecting Claude Code, Gemini CLI, Codex and Cursor in one step, through Factory's MCP server, comes next." }),
+    el("pre", { class: "cmd", text: "python3 keys.py make \"Claude (Ana)\" --person ana@neuratek.com --agent --to ~/.config/neuratek-factory/claude.key" }),
+    el("p", { text: "The API is described under the {} button at the bottom of the sidebar." }));
+}
+
+// The first-run tour: five cards, the page changing behind them.
+const TOUR = [
+  { view: "projects", title: "Welcome to Factory", text: () => "Hello " + S.me.person.name.split(" ")[0] + ". Factory is where we decide what to build and where coding agents build it. On the left are your projects - " + (S.projects.length ? S.projects.map((p) => p.name).join(", ") : "none yet; an admin adds you") + " - and My work, which gathers what is yours.", hi: [0, 6] },
+  { view: "board", title: "A project is a board", text: () => "Each card is one thing to build. It moves left to right: Ideas, Agreed, Next, Building, Done - or Parked. Drag cards between columns; open one to edit it, own it, or talk about it.", hi: [1, 2, 3, 4] },
+  { view: "board", title: "Next is the queue", text: () => "Cards in Next are in order. When an agent finishes what it is on, it takes the top one - so dragging a card up is how you say what matters now.", hi: [2, 8] },
+  { view: "mine", title: "My work is yours", text: () => "When an agent needs a decision from you, when someone @mentions you, or when a question is asked of you, it lands here, from every project. Answer it and it goes away.", hi: [6, 7] },
+  { view: "guide", title: "Your agent works for you", text: () => "Your Claude, Gemini or Codex gets a key of its own, named after you, and appears on the board as it works. How to use Factory, in the sidebar, says how to connect it - and this tour is there again.", hi: [10, 11] },
+];
+
+function tourView(i) { const v = TOUR[i].view; return v === "board" && !S.project ? "projects" : v; }
+function startTour() { S.tour = 0; go(tourView(0)); }
+
+function tour() {
+  const step = TOUR[S.tour];
+  const end = () => { S.tour = null; kept.set("toured", "1"); render(); };
+  const to = (i) => { S.tour = i; go(tourView(i)); };
+  return el("div", { class: "tour", role: "dialog", "aria-modal": "true", "aria-label": "How to use Factory" },
+    el("div", { class: "tourcard" },
+      el("div", { class: "pic", "aria-hidden": "true" }, Array.from({ length: 12 }, (_, i) => el("span", { class: step.hi.includes(i) ? "hi" : "" }))),
+      el("div", { class: "body" }, el("span", { class: "dim mono", style: "font-size:11.5px", text: (S.tour + 1) + " of " + TOUR.length }),
+        el("h2", { text: step.title }), el("p", { text: step.text() })),
+      el("div", { class: "foot" }, el("div", { class: "pips" }, TOUR.map((_, i) => el("span", { class: i <= S.tour ? "on" : "" }))),
+        el("button", { class: "btn quiet skip", type: "button", style: "margin-left:auto", onclick: end }, "Skip the tour"),
+        S.tour > 0 ? el("button", { class: "btn", type: "button", onclick: () => to(S.tour - 1) }, "Back") : null,
+        S.tour < TOUR.length - 1 ? el("button", { class: "btn go next", type: "button", onclick: () => to(S.tour + 1) }, "Next")
+          : el("button", { class: "btn go next", type: "button", onclick: end }, "Start working"))));
+}
+
+// ---- The API, for another device or a program -----------------------------------------
+// The same table as README.md, which test_board.py holds it to.
+
+const ROUTES = [["GET","/api/me","who asks: the key's name, its person, whether an admin, its projects (`null`: all) and the role in each"],["GET","/api/mine","My work: the cards I own, and what waits for me, in every project"],["POST","/api/mentions/:id/done","a mention seen, out of My work"],["GET","/api/people","everyone an admin can see; anyone else, the people sharing a project with them"],["POST","/api/people","`{ email, name, admin }`: someone added before they sign in - admins only"],["PATCH","/api/people/:id","`name`, `admin`, `removed` - admins only"],["GET","/api/projects?archived=true","the projects, each with its columns counted, its queue's length and what Claude is doing there"],["POST","/api/projects","`{ name, id, detail }`: a new project; `id` is made from the name when not said"],["PATCH","/api/projects/:id","`name`, `detail`, `archived`"],["GET","/api/now","what Claude is doing, in every project the key reaches"],["GET","/api/waiting","what waits for a reply, in every project, each item naming its project"],["GET","/api/changes?since=","everything changed since a time, in every project"],["GET","/api/p/:project/members","who is in the project, and as what"],["PUT","/api/p/:project/members/:person","`{ role }`: member or viewer - admins only"],["DELETE","/api/p/:project/members/:person","out of the project - admins only"],["GET","/api/p/:project/cards?column=&area=&q=","the cards, each column in order"],["POST","/api/p/:project/cards","a new card: `title`, `column` (Ideas when not said), `area`, `ref`, `detail`, `quote`, `before`"],["GET","/api/p/:project/cards/:id","one card, its notes, its history, its decisions"],["PATCH","/api/p/:project/cards/:id","`title`, `area`, `ref`, `detail`, `quote`, `in_roadmap`"],["POST","/api/p/:project/cards/:id/move","`{ column, before }`: into a column, before a card or last"],["POST","/api/p/:project/cards/:id/notes","`{ text, asks }`: a card's talk; `asks` when Claude awaits a reply"],["DELETE","/api/p/:project/cards/:id","removed, kept to bring back"],["GET","/api/p/:project/decisions?open=true","the questions, open or all"],["POST","/api/p/:project/decisions","`{ card, question, options }`"],["PATCH","/api/p/:project/decisions/:id","`{ answer, words }`: answered, and a note on its card"],["GET","/api/p/:project/now","what Claude is doing here: its card, its step, what it waits on, since when"],["PUT","/api/p/:project/now","`{ card, step, state, waiting }`: said by Claude at each step; `state` is working, waiting or idle"],["GET","/api/p/:project/queue","Claude's queue in order: cards and tasks, each with its place"],["POST","/api/p/:project/queue","`{ card }` or `{ title }` for a task; last, `{ before }` or `{ top: true }`"],["POST","/api/p/:project/queue/:id/move","`{ before }`, `{ top: true }`, or last"],["DELETE","/api/p/:project/queue/:id","out of the queue; a card waiting in Next goes back to Agreed"],["POST","/api/p/:project/queue/take","Claude takes the top: it becomes now, its card Building"],["GET","/api/p/:project/discussions?stage=","open, shaping, ready, became, parked"],["POST","/api/p/:project/discussions","`{ title, idea, for }` - the idea is its first message"],["GET","/api/p/:project/discussions/:id","with its summary, options, open questions, conversation and cards"],["PATCH","/api/p/:project/discussions/:id","`stage`, `summary`, `options`, `questions`, `title`, `idea`, `for`"],["POST","/api/p/:project/discussions/:id/messages","`{ text, asks }`"],["POST","/api/p/:project/discussions/:id/cards","a card made from it, linked both ways; it has become cards"],["GET","/api/p/:project/waiting","what waits for a reply here, from Claude and from a person"],["POST","/api/p/:project/cards/:id/files","a file onto a card: the bytes as the body, `Content-Type`, `?name=&caption=`"],["POST","/api/p/:project/discussions/:id/files","a file onto a discussion, the same way"],["GET","/api/files/:id","the file, if its project is one the key reaches; `DELETE` removes it"],["GET","/api/p/:project/changes?since=","everything changed here since a time"],["GET","/api/p/:project/export.md","the project's board as Markdown"]];
+
+function apiPage() {
+  return el("div", { class: "page" },
+    el("p", { class: "lead", text: "Every request says who asks: a person through Google sign-in, or an agent or a script with a key - Authorization: Bearer kb_… - which belongs to a person and acts for them. Every change is signed with its name. A project's routes are under /api/p/:project." }),
+    el("div", { class: "wrapx" }, el("table", { class: "t" },
+      el("thead", {}, el("tr", {}, el("th", { text: "" }), el("th", { text: "Path" }), el("th", { text: "What it does" }))),
+      el("tbody", {}, ROUTES.map(([m, path, what]) => el("tr", {},
+        el("td", { class: "mono", style: "color:var(--accent);font-size:12px", text: m }),
+        el("td", { class: "mono", style: "font-size:12px;white-space:nowrap", text: path }),
+        el("td", { text: what.replace(/`/g, "") })))))));
+}
+
+// ---- Drawing ----------------------------------------------------------------------------
+
+function renderMain() {
+  const main = document.getElementById("main");
+  if (!main) return render();
+  const scroll = document.querySelector(".columns");
+  const left = scroll ? scroll.scrollLeft : 0;
+  const tops = Object.fromEntries([...document.querySelectorAll(".col .list")].map((l) => [l.dataset.col, l.scrollTop]));
+  const inProject = PROJECT_VIEWS.includes(S.view) && S.project;
+  const view = !inProject && PROJECT_VIEWS.includes(S.view) ? overview()
+    : S.view === "board" ? board() : S.view === "queue" ? [agentsBar(), queue()] : S.view === "discussions" ? discussions()
+    : S.view === "decisions" ? decisions() : S.view === "members" ? members() : S.view === "mine" ? mine()
+    : S.view === "people" && S.me.admin ? people() : S.view === "guide" ? guide() : S.view === "api" ? apiPage() : overview();
+  main.replaceChildren(...[view].flat(Infinity).filter(Boolean));
+  const again = document.querySelector(".columns");
+  if (again) {
+    again.scrollLeft = left;
+    document.querySelectorAll(".col .list").forEach((l) => { l.scrollTop = tops[l.dataset.col] || 0; });
+    measure();
+  }
+}
+
+function render() {
+  const app = document.getElementById("app");
+  if (!S.me) { app.replaceChildren(gate()); return; }
+  app.replaceChildren(el("div", { class: "app" + (S.menu ? " menuopen" : "") }, sidebar(), el("div", { class: "main" }, topbar(), el("div", { id: "main" }))),
+    ...(S.tour !== null ? [tour()] : []));
+  renderMain();
+}
+
+// Signed in through Access, the cookie is enough; otherwise this device's key.
+(async () => {
+  try {
+    S.me = await api("/api/me");
+    await load();
+    if (!kept.get("toured")) { S.tour = 0; S.view = TOUR[0].view; }
+  } catch (e) {}
+  render();
+})();
+</script>
+</body>
+</html>

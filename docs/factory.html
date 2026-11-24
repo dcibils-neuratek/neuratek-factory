@@ -1,0 +1,421 @@
+<!-- Neuratek Factory. Copyright (c) 2026 Diego Cibils. MIT; see LICENSE. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Factory, as drawn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Neuratek Factory, drawn before it is built (`docs/platform.md`): a dense
+   work tool in light and dark. Five screens - Board, My work, Agents,
+   Repository, and the first-run Guide - switched in the bar on top, which
+   belongs to this drawing and not to Factory. */
+:root {
+  --ground: #f4f5f7; --panel: #ffffff; --sunk: #eceef2; --line: #dfe2e8; --line2: #cfd4dd;
+  --ink: #161a22; --soft: #3d4452; --dim: #6b7383; --accent: #3550d6; --accent-ink: #ffffff; --accent-soft: #e6eafb;
+  --amber: #b7660a; --amber-soft: #fdf0dc; --green: #1f8a4c; --green-soft: #e1f4e8; --red: #c23a3a; --red-soft: #fbe5e5;
+  --violet: #6c4fd1; --violet-soft: #eee9fb; --teal: #0f8a80;
+  --c-ideas: #c9861b; --c-agreed: #7a5cdb; --c-next: #0f8a80; --c-building: #3550d6; --c-review: #b04fa0; --c-done: #1f8a4c;
+  --shadow: 0 1px 2px rgba(20, 26, 40, .06), 0 4px 14px rgba(20, 26, 40, .06);
+  --body: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0e1116; --panel: #151a21; --sunk: #1b2129; --line: #252c36; --line2: #323b48;
+    --ink: #e7ebf1; --soft: #c0c7d2; --dim: #8b94a3; --accent: #7d93ff; --accent-ink: #0b1030; --accent-soft: #1c2447;
+    --amber: #f0b14e; --amber-soft: #2d2412; --green: #5fcf8c; --green-soft: #13281c; --red: #f07b7b; --red-soft: #2e1818;
+    --violet: #a993ff; --violet-soft: #231c3d; --teal: #4fd0c3;
+    --c-ideas: #f0b14e; --c-agreed: #a993ff; --c-next: #4fd0c3; --c-building: #7d93ff; --c-review: #e08fd2; --c-done: #5fcf8c;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0e1116; --panel: #151a21; --sunk: #1b2129; --line: #252c36; --line2: #323b48;
+  --ink: #e7ebf1; --soft: #c0c7d2; --dim: #8b94a3; --accent: #7d93ff; --accent-ink: #0b1030; --accent-soft: #1c2447;
+  --amber: #f0b14e; --amber-soft: #2d2412; --green: #5fcf8c; --green-soft: #13281c; --red: #f07b7b; --red-soft: #2e1818;
+  --violet: #a993ff; --violet-soft: #231c3d; --teal: #4fd0c3;
+  --c-ideas: #f0b14e; --c-agreed: #a993ff; --c-next: #4fd0c3; --c-building: #7d93ff; --c-review: #e08fd2; --c-done: #5fcf8c;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--ground); color: var(--ink); font: 13.5px/1.45 var(--body); }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mono { font-family: var(--mono); }
+.dim { color: var(--dim); }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+
+/* the drawing's own switcher */
+.drawing { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 16px; background: var(--ink); color: var(--panel); font-size: 12.5px; }
+.drawing b { font-weight: 600; margin-right: 8px; }
+.drawing button { border: 1px solid rgba(255,255,255,.25); background: transparent; color: inherit; border-radius: 6px; padding: 4px 10px; }
+.drawing button[aria-pressed="true"] { background: var(--panel); color: var(--ink); }
+.drawing .theme { margin-left: auto; }
+
+/* the app frame */
+.app { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: calc(100vh - 42px); }
+.side { background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px; padding: 12px 10px; }
+.brand { display: flex; align-items: center; gap: 9px; padding: 4px 8px 12px; font-weight: 700; letter-spacing: -.01em; }
+.brand .mk { width: 24px; height: 24px; border-radius: 6px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: 700 13px var(--mono); }
+.side .sec { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--dim); padding: 12px 8px 4px; display: flex; justify-content: space-between; }
+.nav { display: flex; align-items: center; gap: 9px; padding: 6px 8px; border-radius: 7px; border: 0; background: none; text-align: left; width: 100%; color: var(--soft); }
+.nav:hover { background: var(--sunk); }
+.nav.on { background: var(--accent-soft); color: var(--ink); font-weight: 500; }
+.nav .n { margin-left: auto; font: 500 11px var(--mono); color: var(--dim); }
+.nav .n.hot { color: var(--accent-ink); background: var(--amber); border-radius: 999px; padding: 0 6px; }
+.pj { width: 18px; height: 18px; border-radius: 5px; display: grid; place-items: center; font: 600 10px var(--mono); color: #fff; flex: none; }
+.side .foot { margin-top: auto; display: flex; align-items: center; gap: 8px; padding: 10px 8px 2px; border-top: 1px solid var(--line); }
+.av { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font: 600 10.5px var(--body); color: #fff; flex: none; }
+.av.s { width: 20px; height: 20px; font-size: 9.5px; }
+.avs { display: flex; }
+.avs .av { border: 2px solid var(--panel); margin-left: -6px; }
+.avs .av:first-child { margin-left: 0; }
+
+.main { min-width: 0; display: flex; flex-direction: column; }
+.top { display: flex; align-items: center; gap: 12px; padding: 10px 18px; border-bottom: 1px solid var(--line); background: var(--panel); }
+.top h1 { margin: 0; font-size: 15px; font-weight: 600; }
+.crumb { color: var(--dim); }
+.tabs { display: flex; gap: 2px; margin-left: 10px; }
+.tabs button { border: 0; background: none; padding: 5px 10px; border-radius: 6px; color: var(--dim); }
+.tabs button.on { background: var(--sunk); color: var(--ink); font-weight: 500; }
+.search { margin-left: auto; display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--ground); border-radius: 7px; padding: 5px 10px; color: var(--dim); min-width: 220px; }
+.search kbd { margin-left: auto; font: 11px var(--mono); border: 1px solid var(--line2); border-radius: 4px; padding: 0 4px; }
+.btn { border: 1px solid var(--line2); background: var(--panel); border-radius: 7px; padding: 5px 11px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.btn.go { background: var(--accent); border-color: transparent; color: var(--accent-ink); font-weight: 500; }
+
+/* agents at work, one line each */
+.agents { display: flex; gap: 8px; padding: 8px 18px; border-bottom: 1px solid var(--line); background: var(--panel); overflow-x: auto; }
+.ag { display: flex; align-items: center; gap: 8px; padding: 5px 10px 5px 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--ground); white-space: nowrap; font-size: 12.5px; }
+.ag .eng { font: 500 10.5px var(--mono); padding: 1px 5px; border-radius: 4px; background: var(--sunk); color: var(--soft); }
+.ag .st { width: 7px; height: 7px; border-radius: 50%; }
+.ag.wait { border-color: var(--amber); background: var(--amber-soft); }
+
+/* the board */
+.work { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 360px; min-height: 0; }
+.cols { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(178px, 1fr); gap: 10px; padding: 14px 18px; overflow-x: auto; align-items: start; }
+.col { min-width: 0; }
+.colh { display: flex; align-items: center; gap: 7px; padding: 2px 4px 8px; font-weight: 600; font-size: 12.5px; }
+.colh .n { color: var(--dim); font: 500 11.5px var(--mono); }
+.colh .hint { margin-left: auto; color: var(--dim); font-weight: 400; font-size: 11.5px; }
+.list { display: flex; flex-direction: column; gap: 6px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; text-align: left; width: 100%; box-shadow: 0 1px 0 rgba(20,26,40,.03); }
+.card:hover { border-color: var(--line2); }
+.card.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.card .t { font-weight: 500; line-height: 1.32; }
+.card .m { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--dim); flex-wrap: wrap; }
+.card .m .ref { font-family: var(--mono); }
+.card .m .avs { margin-left: auto; }
+.tag { font-size: 11px; padding: 0 6px; border-radius: 4px; background: var(--sunk); color: var(--soft); white-space: nowrap; }
+.tag.pr { font-family: var(--mono); background: var(--violet-soft); color: var(--violet); }
+.tag.ok { background: var(--green-soft); color: var(--green); }
+.tag.bad { background: var(--red-soft); color: var(--red); }
+.tag.you { background: var(--amber-soft); color: var(--amber); font-weight: 500; }
+.tag.here { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.q { font: 500 10.5px var(--mono); color: var(--dim); }
+.more { color: var(--dim); font-size: 12px; padding: 4px; }
+
+/* the card, opened */
+.pane { border-left: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
+.pane .hd { padding: 14px 16px 10px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.pane h2 { margin: 0; font-size: 17px; line-height: 1.3; font-weight: 600; text-wrap: balance; }
+.kv { display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 6px 10px; font-size: 12.5px; align-items: center; }
+.kv dt { color: var(--dim); }
+.kv dd { margin: 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.sect { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.sect h3 { margin: 0; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--dim); font-weight: 500; }
+.repo { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.repo .row { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-top: 1px solid var(--line); font-size: 12.5px; }
+.repo .row:first-child { border-top: 0; }
+.repo .row .r { margin-left: auto; }
+.check { width: 14px; height: 14px; border-radius: 50%; display: grid; place-items: center; font-size: 9px; color: #fff; flex: none; }
+.ask { border: 1px solid var(--amber); background: var(--amber-soft); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.ask .opts { display: flex; gap: 6px; flex-wrap: wrap; }
+.msg { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 8px; font-size: 12.5px; }
+.msg .by { color: var(--dim); font-size: 11.5px; }
+.msg .b { line-height: 1.45; }
+.msg .b .mention { color: var(--accent); font-weight: 500; }
+.compose { margin: 12px 16px 16px; border: 1px solid var(--line2); border-radius: 8px; padding: 8px 10px; color: var(--dim); display: flex; align-items: center; gap: 8px; }
+.compose .btn { margin-left: auto; }
+
+/* pages */
+.page { padding: 18px; display: flex; flex-direction: column; gap: 16px; max-width: 1180px; }
+.page h2.h { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -.01em; }
+.lead { color: var(--soft); margin: 0; max-width: 70ch; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.box { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.box h3 { margin: 0; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.box h3 .n { margin-left: auto; font: 500 11.5px var(--mono); color: var(--dim); }
+.item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 12.5px; }
+.item:first-of-type { border-top: 0; }
+.item .r { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+table.t { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font-size: 12.5px; }
+table.t th { text-align: left; font-weight: 500; color: var(--dim); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; padding: 8px 12px; background: var(--sunk); }
+table.t td { padding: 9px 12px; border-top: 1px solid var(--line); vertical-align: middle; }
+.wrapx { overflow-x: auto; }
+pre.cmd { margin: 0; font: 12px/1.5 var(--mono); background: var(--sunk); border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; overflow-x: auto; color: var(--soft); }
+.engines { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+.engine { border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: var(--panel); display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.engine.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.engine b { font-size: 14px; }
+.steps { display: flex; gap: 12px; flex-wrap: wrap; }
+.step { flex: 1 1 200px; border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: var(--panel); display: flex; flex-direction: column; gap: 6px; }
+.step .k { font: 500 11px var(--mono); color: var(--accent); }
+
+/* the first-run tour, over the board */
+.tour { position: fixed; inset: 42px 0 0 0; background: rgba(10, 14, 22, .35); display: grid; place-items: center; padding: 16px; z-index: 10; }
+.tourcard { width: min(560px, 100%); background: var(--panel); border-radius: 14px; box-shadow: var(--shadow); border: 1px solid var(--line); overflow: hidden; }
+.tourcard .pic { height: 150px; background: var(--sunk); border-bottom: 1px solid var(--line); display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 16px; align-items: start; }
+.tourcard .pic div { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; height: 22px; }
+.tourcard .pic div.hi { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.tourcard .body { padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
+.tourcard h2 { margin: 0; font-size: 18px; }
+.tourcard .foot { display: flex; align-items: center; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--line); }
+.pips { display: flex; gap: 5px; }
+.pips span { width: 18px; height: 4px; border-radius: 2px; background: var(--line2); }
+.pips span.on { background: var(--accent); }
+
+[hidden] { display: none !important; }
+@media (max-width: 1100px) { .work { grid-template-columns: minmax(0, 1fr); } .pane { border-left: 0; border-top: 1px solid var(--line); } }
+@media (max-width: 760px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .side { display: none; }
+  .search { display: none; }
+  .tabs { margin-left: 0; overflow-x: auto; }
+  .top { flex-wrap: wrap; padding: 10px 16px; }
+  .cols { padding: 12px 16px; grid-auto-columns: 78vw; }
+  .page { padding: 16px; }
+}
+</style>
+</head>
+<body>
+<div class="drawing" role="group" aria-label="Screens in this drawing">
+  <b>Factory, as drawn</b>
+  <button data-screen="board" aria-pressed="true">Board</button>
+  <button data-screen="mine" aria-pressed="false">My work</button>
+  <button data-screen="agents" aria-pressed="false">Agents</button>
+  <button data-screen="repo" aria-pressed="false">Repository</button>
+  <button data-screen="guide" aria-pressed="false">First run</button>
+  <button class="theme" id="theme">Light / dark</button>
+</div>
+
+<div class="app">
+  <aside class="side" aria-label="Projects and views">
+    <div class="brand"><span class="mk">F</span>Neuratek Factory</div>
+    <button class="nav" data-screen="mine"><span aria-hidden="true">◎</span>My work<span class="n hot">4</span></button>
+    <button class="nav"><span aria-hidden="true">≡</span>All projects<span class="n">6</span></button>
+    <button class="nav" data-screen="agents"><span aria-hidden="true">◇</span>Agents<span class="n">5 live</span></button>
+    <button class="nav" data-screen="guide"><span aria-hidden="true">?</span>How to use Factory</button>
+    <div class="sec"><span>Projects</span><span>+</span></div>
+    <button class="nav on" data-screen="board"><span class="pj" style="background:#3550d6">PA</span>Payments API<span class="n">3</span></button>
+    <button class="nav"><span class="pj" style="background:#0f8a80">MO</span>Mobile app<span class="n">1</span></button>
+    <button class="nav"><span class="pj" style="background:#b04fa0">WS</span>Website<span class="n"></span></button>
+    <button class="nav"><span class="pj" style="background:#c9861b">DP</span>Data platform<span class="n">2</span></button>
+    <button class="nav"><span class="pj" style="background:#6c4fd1">KO</span>Kosmos<span class="n"></span></button>
+    <div class="sec"><span>Payments API</span></div>
+    <button class="nav" data-screen="board"><span aria-hidden="true">▦</span>Board</button>
+    <button class="nav"><span aria-hidden="true">↧</span>Queue<span class="n">7</span></button>
+    <button class="nav"><span aria-hidden="true">◌</span>Discussions<span class="n">2</span></button>
+    <button class="nav" data-screen="repo"><span aria-hidden="true">⎇</span>Repository</button>
+    <button class="nav"><span aria-hidden="true">☺</span>Members<span class="n">8</span></button>
+    <div class="foot"><span class="av" style="background:#3550d6">DC</span><span>Diego Cibils<br><span class="dim" style="font-size:11.5px">Admin</span></span></div>
+  </aside>
+
+  <div class="main">
+    <!-- BOARD -->
+    <section data-view="board">
+      <div class="top">
+        <h1><span class="crumb">Payments API /</span> Board</h1>
+        <div class="tabs" role="tablist"><button class="on">Board</button><button>Mine</button><button>Waiting for a person</button></div>
+        <div class="search"><span aria-hidden="true">⌕</span>Search cards, people, PRs<kbd>/</kbd></div>
+        <button class="btn go">New card</button>
+      </div>
+      <div class="agents" aria-label="Agents at work in this project">
+        <span class="ag"><span class="av s" style="background:#0f8a80">AR</span>Claude (Ana)<span class="eng">claude · opus-5.5</span><span class="st" style="background:var(--green)"></span>Refund webhooks · writing tests<span class="dim">42 min</span></span>
+        <span class="ag wait"><span class="av s" style="background:#c9861b">BM</span>Gemini (Ben)<span class="eng">gemini-cli</span><span class="st" style="background:var(--amber)"></span>Waiting on Ben: which currency rounding?</span>
+        <span class="ag"><span class="av s" style="background:#6c4fd1">LS</span>Codex (Lucía)<span class="eng">codex · gpt-5</span><span class="st" style="background:var(--green)"></span>Idempotency keys · CI running</span>
+        <span class="ag"><span class="av s" style="background:#3550d6">DC</span>Claude (Diego)<span class="eng">claude</span><span class="st" style="background:var(--dim)"></span>idle · 7 in the queue</span>
+      </div>
+      <div class="work">
+        <div class="cols">
+          <div class="col"><div class="colh"><span class="dot" style="background:var(--c-ideas)"></span>Ideas<span class="n">9</span></div><div class="list">
+            <button class="card"><span class="t">Apple Pay in checkout</span><span class="m"><span class="tag">Checkout</span><span class="tag">2 messages</span></span></button>
+            <button class="card"><span class="t">Fraud scores from the risk team's model</span><span class="m"><span class="tag">Risk</span></span></button>
+            <div class="more">+ 7 more</div></div></div>
+          <div class="col"><div class="colh"><span class="dot" style="background:var(--c-agreed)"></span>Agreed<span class="n">6</span></div><div class="list">
+            <button class="card"><span class="t">Payouts report as CSV</span><span class="m"><span class="ref">PAY-41</span><span class="avs"><span class="av s" style="background:#c9861b">BM</span></span></span></button>
+            <button class="card"><span class="t">Retry failed webhooks with backoff</span><span class="m"><span class="ref">PAY-44</span><span class="tag you">Needs you</span></span></button>
+            <div class="more">+ 4 more</div></div></div>
+          <div class="col"><div class="colh"><span class="dot" style="background:var(--c-next)"></span>Next<span class="n">7</span><span class="hint">the queue</span></div><div class="list">
+            <button class="card"><span class="m"><span class="q">#1</span><span class="ref">PAY-47</span></span><span class="t">Multi-currency balances</span><span class="m"><span class="tag">Ledger</span><span class="avs"><span class="av s" style="background:#6c4fd1">LS</span></span></span></button>
+            <button class="card"><span class="m"><span class="q">#2</span><span class="ref">PAY-49</span></span><span class="t">Rate limits per merchant</span><span class="m"><span class="tag">Platform</span></span></button>
+            <div class="more">+ 5 more</div></div></div>
+          <div class="col"><div class="colh"><span class="dot" style="background:var(--c-building)"></span>Building<span class="n">3</span></div><div class="list">
+            <button class="card sel"><span class="m"><span class="ref">PAY-38</span><span class="tag here">Claude (Ana)</span></span><span class="t">Refund webhooks</span><span class="m"><span class="tag pr">#212</span><span class="tag ok">CI ✓</span><span class="avs"><span class="av s" style="background:#0f8a80">AR</span></span></span></button>
+            <button class="card"><span class="m"><span class="ref">PAY-45</span><span class="tag here">Gemini (Ben)</span></span><span class="t">Currency rounding rules</span><span class="m"><span class="tag you">Ben</span><span class="avs"><span class="av s" style="background:#c9861b">BM</span></span></span></button>
+            <button class="card"><span class="m"><span class="ref">PAY-46</span><span class="tag here">Codex (Lucía)</span></span><span class="t">Idempotency keys on every POST</span><span class="m"><span class="tag pr">#215</span><span class="tag">CI …</span></span></button></div></div>
+          <div class="col"><div class="colh"><span class="dot" style="background:var(--c-review)"></span>Review<span class="n">2</span><span class="hint">PR open</span></div><div class="list">
+            <button class="card"><span class="m"><span class="ref">PAY-36</span></span><span class="t">Statement descriptors</span><span class="m"><span class="tag pr">#208</span><span class="tag ok">CI ✓</span><span class="tag you">Your review</span></span></button>
+            <button class="card"><span class="m"><span class="ref">PAY-35</span></span><span class="t">Dispute evidence upload</span><span class="m"><span class="tag pr">#205</span><span class="tag bad">CI ✗</span></span></button></div></div>
+          <div class="col"><div class="colh"><span class="dot" style="background:var(--c-done)"></span>Done<span class="n">58</span><span class="hint">merged</span></div><div class="list">
+            <button class="card"><span class="t">Webhook signing v2</span><span class="m"><span class="tag pr">#201</span><span class="dim">merged yesterday</span></span></button>
+            <div class="more">+ 57 more</div></div></div>
+        </div>
+
+        <aside class="pane" aria-label="The open card">
+          <div class="hd">
+            <span class="dim mono" style="font-size:12px">PAY-38 · Building</span>
+            <h2>Refund webhooks</h2>
+            <dl class="kv">
+              <dt>Owners</dt><dd><span class="av s" style="background:#0f8a80">AR</span>Ana Rossi</dd>
+              <dt>Agent</dt><dd><span class="tag here">Claude (Ana)</span><span class="dim">claude · opus-5.5 · 42 min</span></dd>
+              <dt>Area</dt><dd><span class="tag">Webhooks</span></dd>
+              <dt>Queue</dt><dd class="dim">taken from #1 at 14:02</dd>
+            </dl>
+          </div>
+          <div class="sect">
+            <h3>Code</h3>
+            <div class="repo">
+              <div class="row"><span aria-hidden="true">⎇</span><span class="mono">factory/pay-38-refund-webhooks</span><span class="r dim">neuratek/payments-api</span></div>
+              <div class="row"><span class="tag pr">#212</span>Refund webhooks<span class="r dim">+412 −38 · 9 files</span></div>
+              <div class="row"><span class="check" style="background:var(--green)">✓</span>CI · tests, lint, types<span class="r dim">3 min ago</span></div>
+            </div>
+          </div>
+          <div class="sect">
+            <h3>Waiting for you</h3>
+            <div class="ask"><span><b>Claude (Ana)</b> asks Ana: send a refund event when a partial refund is reversed?</span>
+              <div class="opts"><button class="btn">Yes, as refund.reversed</button><button class="btn">No</button><button class="btn">In my words…</button></div></div>
+          </div>
+          <div class="sect">
+            <h3>Talk</h3>
+            <div class="msg"><span class="av s" style="background:#3550d6">DC</span><div><div class="by">Diego · 13:40</div><div class="b"><span class="mention">@ana</span> merchants asked for this in the last call - same payload shape as payments, please.</div></div></div>
+            <div class="msg"><span class="av s" style="background:#0f8a80">AR</span><div><div class="by">Ana · 13:52</div><div class="b">Queued it for my Claude, top of the queue.</div></div></div>
+            <div class="msg"><span class="av s" style="background:#222b38">C</span><div><div class="by">Claude (Ana) · 14:31</div><div class="b">Events and signing done, PR #212 open. Tests for retries next.</div></div></div>
+          </div>
+          <div class="compose">Write, or @mention someone…<button class="btn go">Send</button></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- MY WORK -->
+    <section data-view="mine" hidden>
+      <div class="top"><h1>My work</h1><span class="dim">every project you are in</span></div>
+      <div class="page">
+        <div class="grid">
+          <div class="box"><h3><span class="dot" style="background:var(--amber)"></span>Waiting for you<span class="n">4</span></h3>
+            <div class="item"><span class="tag you">Question</span>Currency rounding: banker's or half-up?<span class="r"><span class="pj" style="background:#3550d6">PA</span></span></div>
+            <div class="item"><span class="tag you">Review</span>PR #208 Statement descriptors<span class="r"><span class="pj" style="background:#3550d6">PA</span></span></div>
+            <div class="item"><span class="tag you">Mention</span>Lucía: "@diego can we drop iOS 16?"<span class="r"><span class="pj" style="background:#0f8a80">MO</span></span></div>
+            <div class="item"><span class="tag you">Your agent</span>Claude (Diego) waits on: staging credentials<span class="r"><span class="pj" style="background:#c9861b">DP</span></span></div>
+          </div>
+          <div class="box"><h3><span class="dot" style="background:var(--accent)"></span>My cards<span class="n">5</span></h3>
+            <div class="item"><span class="mono dim">PAY-41</span>Payouts report as CSV<span class="r"><span class="tag">Agreed</span></span></div>
+            <div class="item"><span class="mono dim">MO-12</span>Offline mode for the cart<span class="r"><span class="tag">Building</span><span class="tag pr">#88</span></span></div>
+            <div class="item"><span class="mono dim">DP-7</span>Nightly export to the warehouse<span class="r"><span class="tag">Next #2</span></span></div>
+            <div class="item"><span class="mono dim">WS-3</span>Pricing page copy<span class="r"><span class="tag">Review</span></span></div>
+          </div>
+          <div class="box"><h3><span class="dot" style="background:var(--green)"></span>My agents<span class="n">2</span></h3>
+            <div class="item"><span class="av s" style="background:#222b38">C</span>Claude (Diego)<span class="r"><span class="eng tag">claude</span><span class="dim">waiting · DP</span></span></div>
+            <div class="item"><span class="av s" style="background:#222b38">G</span>Gemini (Diego)<span class="r"><span class="tag">gemini-cli</span><span class="dim">idle</span></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AGENTS -->
+    <section data-view="agents" hidden>
+      <div class="top"><h1>Agents</h1><span class="dim">any engine, connected the same way</span><button class="btn go" style="margin-left:auto">Connect an agent</button></div>
+      <div class="page">
+        <p class="lead">An agent is a coding agent you already use, given its own key. It takes the next card from a project's queue, says what it is doing, asks you when it needs a decision, and links the branch and pull request its work became.</p>
+        <h2 class="h" style="font-size:15px">1 · Choose the engine</h2>
+        <div class="engines">
+          <button class="engine on"><b>Claude Code</b><span class="dim">Anthropic · MCP built in</span></button>
+          <button class="engine"><b>Gemini CLI</b><span class="dim">Google · MCP built in</span></button>
+          <button class="engine"><b>Codex CLI</b><span class="dim">OpenAI · MCP built in</span></button>
+          <button class="engine"><b>Cursor</b><span class="dim">MCP in settings</span></button>
+          <button class="engine"><b>Anything else</b><span class="dim">the HTTP API and a key</span></button>
+        </div>
+        <h2 class="h" style="font-size:15px">2 · Give it Factory</h2>
+        <pre class="cmd">claude mcp add factory -- npx neuratek-factory-mcp --key-file ~/.config/neuratek-factory/claude.key</pre>
+        <p class="lead dim" style="font-size:12.5px">The key is made here for you, named "Claude (Diego)", and saved by the command; it is never shown on screen.</p>
+        <h2 class="h" style="font-size:15px">Connected</h2>
+        <div class="wrapx"><table class="t">
+          <thead><tr><th>Agent</th><th>Engine</th><th>Whose</th><th>Now</th><th>This week</th></tr></thead>
+          <tbody>
+            <tr><td>Claude (Ana)</td><td class="mono">claude · opus-5.5</td><td>Ana Rossi</td><td><span class="tag here">Payments · PAY-38</span></td><td class="mono">14 cards · 11 PRs merged</td></tr>
+            <tr><td>Gemini (Ben)</td><td class="mono">gemini-cli · 3.0-pro</td><td>Ben Méndez</td><td><span class="tag you">waiting on Ben</span></td><td class="mono">6 cards · 4 merged</td></tr>
+            <tr><td>Codex (Lucía)</td><td class="mono">codex · gpt-5</td><td>Lucía Sosa</td><td><span class="tag here">Payments · PAY-46</span></td><td class="mono">9 cards · 7 merged</td></tr>
+            <tr><td>Claude (Diego)</td><td class="mono">claude · opus-5.5</td><td>Diego Cibils</td><td class="dim">idle</td><td class="mono">3 cards · 3 merged</td></tr>
+          </tbody></table></div>
+      </div>
+    </section>
+
+    <!-- REPOSITORY -->
+    <section data-view="repo" hidden>
+      <div class="top"><h1><span class="crumb">Payments API /</span> Repository</h1><span class="tag mono">neuratek/payments-api</span><span class="dim">main · GitHub</span></div>
+      <div class="page">
+        <div class="grid">
+          <div class="box"><h3>Pull requests<span class="n">4 open</span></h3>
+            <div class="item"><span class="tag pr">#215</span>Idempotency keys<span class="r"><span class="dim">Codex (Lucía)</span><span class="tag">CI …</span></span></div>
+            <div class="item"><span class="tag pr">#212</span>Refund webhooks<span class="r"><span class="dim">Claude (Ana)</span><span class="tag ok">CI ✓</span></span></div>
+            <div class="item"><span class="tag pr">#208</span>Statement descriptors<span class="r"><span class="tag you">your review</span><span class="tag ok">CI ✓</span></span></div>
+            <div class="item"><span class="tag pr">#205</span>Dispute evidence upload<span class="r"><span class="tag bad">CI ✗ 2 tests</span></span></div>
+          </div>
+          <div class="box"><h3>Recent on main<span class="n">today</span></h3>
+            <div class="item"><span class="mono dim">a41f9c2</span>Webhook signing v2 (#201)<span class="r dim">PAY-33 → Done</span></div>
+            <div class="item"><span class="mono dim">7d0e113</span>Ledger: split balances by currency<span class="r dim">PAY-47</span></div>
+            <div class="item"><span class="mono dim">c2b88a0</span>Bump the SDK to 4.2<span class="r dim">no card</span></div>
+          </div>
+          <div class="box"><h3>How cards find their code</h3>
+            <div class="item">A branch named <span class="mono">factory/pay-38-…</span></div>
+            <div class="item">A commit saying <span class="mono">Factory: PAY-38</span></div>
+            <div class="item">Or the agent links it itself</div>
+            <div class="item dim">A merged PR moves its card to Done</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FIRST RUN: the board behind the tour -->
+    <section data-view="guide" hidden>
+      <div class="top"><h1><span class="crumb">Payments API /</span> Board</h1></div>
+      <div class="page"><div class="steps">
+        <div class="step"><span class="k">PEOPLE</span><b>Plan</b><span class="dim">Ideas become cards; cards are agreed and put in order in Next.</span></div>
+        <div class="step"><span class="k">AGENTS</span><b>Build</b><span class="dim">An agent takes the top of the queue, works in a branch, opens a PR.</span></div>
+        <div class="step"><span class="k">PEOPLE</span><b>Decide</b><span class="dim">When an agent needs you it asks - it shows in My work.</span></div>
+        <div class="step"><span class="k">BOTH</span><b>Review and ship</b><span class="dim">CI passes, someone reviews, the merge moves the card to Done.</span></div>
+      </div></div>
+      <div class="tour" role="dialog" aria-label="How to use Factory">
+        <div class="tourcard">
+          <div class="pic" aria-hidden="true"><div></div><div></div><div class="hi"></div><div></div><div></div><div></div><div></div><div class="hi"></div><div></div><div></div></div>
+          <div class="body">
+            <span class="dim mono" style="font-size:11.5px">Welcome, Ana · 3 of 5</span>
+            <h2>Next is the queue</h2>
+            <p class="lead">Cards in Next are in order. When an agent finishes what it is on, it takes the top one - so dragging a card up is how you say what matters now. You are a member of Payments API and Website; try dragging "Rate limits" above "Multi-currency".</p>
+          </div>
+          <div class="foot"><div class="pips"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></div><button class="btn" style="margin-left:auto">Skip the tour</button><button class="btn go">Next: connect your agent</button></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+"use strict";
+const show = (name) => {
+  document.querySelectorAll("[data-view]").forEach((v) => { v.hidden = v.dataset.view !== name; });
+  document.querySelectorAll(".drawing [data-screen]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.screen === name)));
+};
+document.querySelectorAll("[data-screen]").forEach((b) => b.addEventListener("click", () => show(b.dataset.screen)));
+document.getElementById("theme").addEventListener("click", () => {
+  const r = document.documentElement;
+  const dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  r.dataset.theme = dark ? "light" : "dark";
+});
+</script>
+</body>
+</html>
